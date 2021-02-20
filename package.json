@@ -1,0 +1,23 @@
+{
+  "name": "esantini-api",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:3003/",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lokijs": "^1.5.11",
+    "node-sense-hat": "^0.0.2",
+    "nodemon": "^2.0.7",
+    "sense-hat-led": "^1.2.0",
+    "shelljs": "^0.8.4",
+    "twilio": "^3.56.0"
+  },
+  "scripts": {
+    "start": "./node_modules/nodemon/bin/nodemon.js --watch ./src ./src/api.js"
+  },
+  "description": "my api",
+  "main": "src/api.js",
+  "repository": "git@github.com:esantini/api.git",
+  "author": "Esteban Santini <esantinie@gmail.com>",
+  "license": "MIT"
+}
