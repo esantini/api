@@ -1,7 +1,8 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
 const express = require('express');
 const { addMessage, getMessage, init: dbInit } = require('./database');
-const { update, validateJsonWebhook } = require('./apiUtils');
+const { validateJsonWebhook } = require('./utils');
+const deploy = require('./deploy');
 let sendSMS;
 if (config.smsEnabled) sendSMS = require('./sendSms');
 
@@ -71,15 +72,14 @@ app.post('/api/wedding-message', (req, res) => {
   res.sendStatus(200);
 });
 
-app.post('/api/self-update', (req, res) => {
-  console.log(req.headers);
+app.post('/api/git-push', (req, res) => {
   let error = validateJsonWebhook(req) ? null : 'Invalid Request';
   if (error) {
     console.warn(error);
     return res.sendStatus(401);
   } else res.sendStatus(200);
 
-  update((err) => (error = err));
+  deploy(req.body, (err) => (error = err));
   if (error) console.warn(error);
 });
 

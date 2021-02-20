@@ -1,22 +1,4 @@
-const shell = require('shelljs');
 const crypto = require('crypto');
-
-const err = 'Error: Git pull failed';
-
-const deployCommands = ['git pull', 'yarn', 'yarn build', 'pm2 restart server'];
-
-const update = (cb) => {
-  for (const command of deployCommands) {
-    const { code } = shell.exec(command);
-    if (code !== 0) {
-      shell.echo(`${err} code: ${code}`);
-      return cb(`${err} code: ${code}`);
-    } else {
-      shell.echo(`${command} Success`);
-    }
-  }
-  cb();
-};
 
 const validateJsonWebhook = (request) => {
   // calculate the signature
@@ -35,5 +17,4 @@ const validateJsonWebhook = (request) => {
   return true;
 };
 
-exports.update = update;
 exports.validateJsonWebhook = validateJsonWebhook;
