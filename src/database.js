@@ -1,21 +1,24 @@
 const loki = require('lokijs');
 
-const IS_PROD = process.env.NODE_ENV === 'production';
-
-const db = new loki(IS_PROD ? 'myDatabase.db' : 'devDatabase.db', {
+const db = new loki(config.database, {
   autoload: true,
-  autoloadCallback : databaseInitialize,
+  autoloadCallback: databaseInitialize,
   autosave: true,
-  autosaveInterval: 4000
+  autosaveInterval: 4000,
 });
 let messages;
+let weddingMessages;
 let initCallback = () => {};
 
 // implement the autoloadback referenced in loki constructor
 function databaseInitialize() {
-  messages = db.getCollection("messages");
+  messages = db.getCollection('messages');
   if (messages === null) {
-    messages = db.addCollection("messages");
+    messages = db.addCollection('messages');
+  }
+  weddingMessages = db.getCollection('weddingMessages');
+  if (weddingMessages === null) {
+    weddingMessages = db.addCollection('weddingMessages');
   }
 
   // kick off any program logic or start listening to external events
@@ -29,12 +32,16 @@ function runProgramLogic() {
   initCallback();
 }
 
-const addMessage = message => messages.insert(message);
-
+const addMessage = (message) => messages.insert(message);
 const getMessage = () => messages.where(() => true)[0]?.message;
 
+const addWeddingMessage = (message) => weddingMessages.insert(message);
+const getWeddingMessages = () => weddingMessages.where(() => true);
+
 module.exports = {
-  init: cb => initCallback = cb,
+  init: (cb) => (initCallback = cb),
   addMessage,
   getMessage,
-}
+  addWeddingMessage,
+  getWeddingMessages,
+};

@@ -1,6 +1,12 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
 const express = require('express');
-const { addMessage, getMessage, init: dbInit } = require('./database');
+const {
+  addMessage,
+  addWeddingMessage,
+  getMessage,
+  getWeddingMessages,
+  init: dbInit,
+} = require('./database');
 const { validateJsonWebhook } = require('./utils');
 const deploy = require('./deploy');
 let sendSMS;
@@ -60,16 +66,20 @@ app.listen(app.get('port'), () => {
 });
 
 app.post('/api/wedding-message', (req, res) => {
-  console.log(req.body);
   if (req.body?.message) {
-    console.log(new Date(), req.body.message);
-    // addMessage({
-    //   message,
-    //   ip: req.headers['x-forwarded-for'],
-    // });
+    const { name, message, email } = req.body;
+    addWeddingMessage({
+      name,
+      email,
+      message,
+      ip: req.headers['x-forwarded-for'],
+    });
     if (config.smsEnabled) sendSMS(message);
   }
   res.sendStatus(200);
+});
+app.get('/api/wedding-messages', (req, res) => {
+  res.json(getWeddingMessages());
 });
 
 app.post('/api/git-push', (req, res) => {
