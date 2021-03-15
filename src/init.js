@@ -6,7 +6,7 @@ const template = {
   default: {},
   production: {
     api_key: '', // DON'T PUT API KEYS HERE, set values in privateConfig.json
-    smsEnabled: true,
+    smsEnabled: false,
     twilio: {
       authToken: '',
       accountSid: '',
