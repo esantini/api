@@ -1,5 +1,5 @@
 const fs = require('fs');
-const configs = require('./config.json');
+const configs = require('./config');
 
 // A `privateConfig.json` file is created from this object
 const template = {
