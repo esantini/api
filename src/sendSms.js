@@ -1,8 +1,9 @@
-const accountSid = config.twilio.accountSid;
-const authToken = config.twilio.authToken;
-const client = require('twilio')(accountSid, authToken);
+let client;
+if (config.smsEnabled) {
+  client = require('twilio')(config.twilio.accountSid, config.twilio.authToken);
+}
 
-module.exports = message => client.messages
+module.exports = message => config.smsEnabled && client.messages
   .create({
      body: `New Message: ${message} . From eSantini.com`,
      from: config.twilio.fromNumber,

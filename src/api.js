@@ -1,16 +1,16 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
 const express = require('express');
 const {
-  addMessage,
-  addWeddingMessage,
   getMessage,
   getWeddingMessages,
   init: dbInit,
 } = require('./database');
-const { validateJsonWebhook } = require('./utils');
+const {
+  processMessage,
+  validateJsonWebhook,
+  processWeddingMessage,
+} = require('./utils');
 const deploy = require('./deploy');
-let sendSMS;
-if (config.smsEnabled) sendSMS = require('./sendSms');
 
 const IS_PROD = config.env === 'prod';
 
@@ -72,14 +72,7 @@ app.listen(app.get('port'), () => {
 
 app.post('/api/wedding-message', (req, res) => {
   if (req.body?.message) {
-    const { name, message, email } = req.body;
-    addWeddingMessage({
-      name,
-      email,
-      message,
-      ip: req.headers['x-forwarded-for'],
-    });
-    if (config.smsEnabled) sendSMS(message);
+    processWeddingMessage(req);
   }
   res.sendStatus(200);
 });
@@ -102,12 +95,7 @@ app.get('/api/message', (req, res) => res.json({ message }));
 app.post('/api/message', (req, res) => {
   if (req.body?.message) {
     message = req.body.message;
-    console.log(new Date(), ` setting message ${message}`);
-    addMessage({
-      message,
-      ip: req.headers['x-forwarded-for'],
-    });
-    if (config.smsEnabled) sendSMS(message);
+    processMessage(req);
   }
   res.sendStatus(200);
 });

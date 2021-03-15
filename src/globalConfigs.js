@@ -1,8 +1,10 @@
+// These settings have lower priority than those in privateConfig.json
 module.exports = {
   default: {
     env: 'dev',
     apiPort: 3003,
-    database: 'devDatabase.db'
+    database: 'devDatabase.db',
+    domain: 'esantini.com',
   },
   production: {
     env: 'prod',
