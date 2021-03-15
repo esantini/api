@@ -39,12 +39,6 @@ map $sent_http_content_type $expires {
 
 server {
 
-	# SSL configuration:
-	#
-	listen 443 ssl http2 default_server;
-	listen [::]:443 ssl http2 default_server;
-	ssl on;
-
 	server_name esantini.com www.esantini.com;
 
 	root /home/pi/repos/eSantini/build;
@@ -78,8 +72,12 @@ server {
         proxy_pass http://localhost:3001/api/git-push;
     }
 
+    listen [::]:443 ssl http2 ipv6only=on; # managed by Certbot
+    listen 443 ssl http2; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/esantini.com/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/esantini.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
 }
 
