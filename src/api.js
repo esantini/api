@@ -10,7 +10,6 @@ const {
   validateJsonWebhook,
   processWeddingMessage,
 } = require('./utils');
-const deploy = require('./deploy');
 
 const IS_PROD = config.env === 'prod';
 
@@ -18,9 +17,10 @@ const app = express();
 app.use(express.json());
 app.set('port', config.apiPort);
 
-// Express only serves static assets in production
 if (IS_PROD) {
+  // Express only serves static assets in production
   app.use(express.static('client/build'));
+  require('./deploy')(app);
 }
 
 // LED message in sense-hat:
@@ -58,7 +58,7 @@ if (config.senseHatEnabled) {
     }
   }
   catch (ex) {
-    console.log({ex});
+    console.log({ ex });
   }
 } else {
   app.get('/api/weather', (req, res) =>
@@ -78,17 +78,6 @@ app.post('/api/wedding-message', (req, res) => {
 });
 app.get('/api/wedding-messages', (req, res) => {
   res.json(getWeddingMessages());
-});
-
-app.post('/api/git-push', (req, res) => {
-  let error = validateJsonWebhook(req) ? null : 'Invalid Request';
-  if (error) {
-    console.warn(error);
-    return res.sendStatus(401);
-  } else res.sendStatus(200);
-
-  deploy(req.body, (err) => (error = err));
-  if (error) console.warn(error);
 });
 
 app.get('/api/message', (req, res) => res.json({ message }));

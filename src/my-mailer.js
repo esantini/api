@@ -1,9 +1,13 @@
 const inlineCSS = require('inline-css');
 
-const mailgun = require('mailgun-js')({
-  domain: `mg.${config.domain}`,
-  apiKey: config.mailgun_api_key,
-});
+let mailgun;
+
+if (config.emailEnabled) {
+  mailgun = require('mailgun-js')({
+    domain: `mg.${config.domain}`,
+    apiKey: config.mailgun_api_key,
+  });
+}
 
 const getTemplate = (name, text, sayHi) => `
 <div>
@@ -17,7 +21,9 @@ const getTemplate = (name, text, sayHi) => `
 </div>
 `;
 
-exports.send = async function({to, subject, name, text, sayHi = true, from}) {
+exports.send = async function ({ to, subject, name, text, sayHi = true, from }) {
+  if (!config.emailEnabled) return console.log('"Sending" email: ', subject);
+
   const html = await inlineCSS(getTemplate(name, text, sayHi), { url: 'fake' });
 
   const message = {
@@ -27,7 +33,7 @@ exports.send = async function({to, subject, name, text, sayHi = true, from}) {
     html,
     text: `${sayHi && name ? `Hola ${name}!\n\n` : ''} ${text}`
   };
-  console.log({message});
+  console.log("Sending email: ", subject);
 
   await mailgun.messages().send(message, (error, body) => {
     if (error) throw error;

@@ -32,4 +32,14 @@ const deploy = (payload, cb) => {
   cb();
 };
 
-module.exports = deploy;
+module.exports = app =>
+  app.post('/api/git-push', (req, res) => {
+    let error = validateJsonWebhook(req) ? null : 'Invalid Request';
+    if (error) {
+      console.warn(error);
+      return res.sendStatus(401);
+    } else res.sendStatus(200);
+
+    deploy(req.body, (err) => (error = err));
+    if (error) console.warn(error);
+  });
