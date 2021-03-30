@@ -7,7 +7,6 @@ const {
 } = require('./database');
 const {
   processMessage,
-  validateJsonWebhook,
   processWeddingMessage,
 } = require('./utils');
 

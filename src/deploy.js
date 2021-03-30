@@ -1,4 +1,5 @@
 const shell = require('shelljs');
+const { validateJsonWebhook } = require('./utils');
 
 const repoCommands = {
   api: [
