@@ -48,10 +48,11 @@ exports.processWeddingMessage = (req) => {
     to: email,
     text: `<h2>Hola ${name}!</h2> ${constants.emails.weddingGracias.text}`,
   });
+
   sendEmail({
     from: `${name.trim()} <no-reply@esantini.com>`,
     subject: `Felicitaciones!`,
-    text: `De: ${name} <br />${email ? `Email: ${email}<br />` : ''}<br /> ${message}`,
+    text: `De: ${name} <br />${email ? `Email: ${email}<br />` : ''}<br /> ${message.replace(/(?:\r\n|\r|\n)/g, '<br />')}`,
     to: ['esantinie@gmail.com', 'ana.tamaurab@gmail.com'],
   });
 }
