@@ -16,6 +16,7 @@ const getTemplate = (text) => `
     img.logo { width: 120px }
   </style>
   ${text}
+  <br />
   <img class="logo" src="https://esantini.com/logo.png" />
 </div>
 `;
