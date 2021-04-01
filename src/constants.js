@@ -8,7 +8,7 @@ const emails = {
     </p>
     </br >
     Saluditos =)
-    <h3>Ana Karen & Esteban<h3/>`
+    <h3>Ana Karen & Esteban</h3>`
   }
 };
 
