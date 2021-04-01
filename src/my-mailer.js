@@ -9,33 +9,34 @@ if (config.emailEnabled) {
   });
 }
 
-const getTemplate = (name, text, sayHi) => `
+const getTemplate = (text) => `
 <div>
   <style>
-    h2 { color: #032033; }
+    h2 { color: #d7b065; }
+    img.logo { width: 120px }
   </style>
-
-  ${sayHi && name ? `<h2>Hola ${name}!</h2>` : ''}
-  <br/>
   ${text}
+  <img class="logo" src="https://esantini.com/logo.png" />
 </div>
 `;
 
-exports.send = async function ({ to, subject, name, text, sayHi = true, from }) {
-  if (!config.emailEnabled) return console.log('"Sending" email: ', subject);
-
-  const html = await inlineCSS(getTemplate(name, text, sayHi), { url: 'fake' });
-
-  const message = {
+const getMessage = async ({ to, subject, text, from }) => {
+  const html = await inlineCSS(getTemplate(text), { url: 'fake' });
+  return {
     from: from || 'eSantini Web <no-reply@esantini.com>',
     to,
     subject,
     html,
-    text: `${sayHi && name ? `Hola ${name}!\n\n` : ''} ${text}`
   };
-  console.log("Sending email: ", subject);
+}
 
-  await mailgun.messages().send(message, (error, body) => {
+exports.send = async (emailObj) => {
+  if (!config.emailEnabled) return console.log('"Sending" email: ', emailObj.subject);
+
+  const message = await getMessage(emailObj);
+  console.log("Sending email: ", emailObj.subject);
+
+  mailgun.messages().send(message, (error, body) => {
     if (error) throw error;
     console.log('Mail Sent: ', body.id);
   });
