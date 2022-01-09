@@ -15,7 +15,8 @@
     "twilio": "^3.56.0"
   },
   "scripts": {
-    "start": "./node_modules/nodemon/bin/nodemon.js --watch ./src ./src/api.js"
+    "dev": "./node_modules/nodemon/bin/nodemon.js --watch ./src ./src/api.js",
+    "start": "node ./src/api"
   },
   "description": "my api",
   "main": "src/api.js",

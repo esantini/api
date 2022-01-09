@@ -10,7 +10,7 @@ module.exports = {
     env: 'prod',
     apiPort: 3001,
     database: 'myDatabase.db',
-    senseHatEnabled: true,
+    senseHatEnabled: false,
     api_dir: '/home/pi/repos/api',
     page_dir: '/home/pi/repos/eSantini',
     wedding_dir: '/home/pi/repos/wedding'

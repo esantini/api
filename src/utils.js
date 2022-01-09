@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { addWeddingMessage, addMessage } = require('./database');
+const pythons = require('./python');
 const sendSMS = require('./sendSms');
 const sendEmail = require('./my-mailer').send;
 const constants = require('./constants');
@@ -23,15 +24,37 @@ const validateJsonWebhook = (request) => {
 
 exports.validateJsonWebhook = validateJsonWebhook;
 
+let notifProcess;
+const notify = () => {
+  if (notifProcess) {
+    pythons.beep();
+  }
+  else {
+    notifProcess = pythons.notify();
+  }
+}
+
+pythons.listenButton().stdout.on('data', (data) => {
+  console.log({data});
+  if (notifProcess) {
+    notifProcess.kill('SIGTERM');
+    notifProcess = null;
+  }
+});
+
 exports.processMessage = (req) => {
   const { message } = req.body;
   console.log(new Date(), ` setting message ${message}`);
+  notify();
+  pythons.text(message);
   addMessage({
     message,
     ip: req.headers['x-forwarded-for'],
   });
   sendSMS(message);
 }
+
+exports.notify = notify;
 
 exports.processWeddingMessage = (req) => {
   const { name, message, email } = req.body;
