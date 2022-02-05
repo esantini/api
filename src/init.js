@@ -1,9 +1,12 @@
 const fs = require('fs');
-const configs = require('./globalConfigs');
+const configs = require('./configs');
 
 // A `privateConfig.json` file is created from this object
 const template = {
-  default: {},
+  default: {
+    sessionSecret: 'changeThis', // secret in cookie sessions
+    oauth: {},
+  },
   production: {
     api_key: '', // DON'T PUT API KEYS HERE, set values in privateConfig.json
     smsEnabled: false,
@@ -12,9 +15,6 @@ const template = {
       accountSid: '',
       fromNumber: '',
       phoneNumber: '',
-    },
-    oauth: {
-      web: {},
     },
   },
 };
@@ -38,3 +38,13 @@ global.config = Object.assign(
   privateConfigs.default,
   privateConfigs[env] || {}
 );
+
+const {
+  getMessage,
+  init: dbInit,
+} = require('./database');
+
+// LED message in sense-hat:
+let message = 'Hello World!';
+// cannot getMessage() before database is initialized so set message in dbInit(cb)
+dbInit(() => (message = getMessage()));

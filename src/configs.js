@@ -5,14 +5,16 @@ module.exports = {
     apiPort: 3001,
     database: 'devDatabase.db',
     domain: 'esantini.com',
+    ssl: false,
   },
   production: {
     env: 'prod',
     apiPort: 3001,
     database: 'myDatabase.db',
     senseHatEnabled: false,
+    ssl: true,
     api_dir: '/home/pi/repos/api',
     page_dir: '/home/pi/repos/eSantini',
-    wedding_dir: '/home/pi/repos/wedding'
+    wedding_dir: '/home/pi/repos/wedding',
   }
 }
