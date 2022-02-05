@@ -7,3 +7,4 @@ devDatabase.db
 # Use privateConfig.json to add api-keys or other sensitive variables.
 privateConfig.json
 access.log
+src/python/__pycache__/*

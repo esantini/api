@@ -6,7 +6,8 @@ const sendEmail = require('./my-mailer').send;
 const constants = require('./constants');
 const lcd = require('./lcd_controller');
 
-const validateJsonWebhook = (request) => {
+exports.validateJsonWebhook = (request) => {
+  if (!config.git_webhook_secret) return false;
   // calculate the signature
   const expectedSignature =
     'sha1=' +
@@ -22,8 +23,6 @@ const validateJsonWebhook = (request) => {
   }
   return true;
 };
-
-exports.validateJsonWebhook = validateJsonWebhook;
 
 exports.processMessage = (req) => {
   const { message } = req.body;

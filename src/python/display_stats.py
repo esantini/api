@@ -18,7 +18,10 @@ import subprocess
 # Initialise the LCD
 lcd = i2c.CharLCD(i2c_expander, address, port=port, charmap=charmap,
                   cols=cols, rows=rows)
+lcd.home()
 lcd.clear()
+
+sleep(.1)
 
 GPIO.setmode(GPIO.BOARD)
 
