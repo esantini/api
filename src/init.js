@@ -13,6 +13,9 @@ const template = {
       fromNumber: '',
       phoneNumber: '',
     },
+    oauth: {
+      web: {},
+    },
   },
 };
 

@@ -2,7 +2,7 @@
 module.exports = {
   default: {
     env: 'dev',
-    apiPort: 3003,
+    apiPort: 3001,
     database: 'devDatabase.db',
     domain: 'esantini.com',
   },

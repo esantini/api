@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import time
+from time import sleep
 import RPi.GPIO as GPIO
 from datetime import datetime
 
@@ -13,10 +13,8 @@ if __name__ == '__main__':
 	# blinking light
 	GPIO.setup(buzz_pin, GPIO.OUT, initial=GPIO.LOW)
 
-	# Beep for .5 second:
-
 	GPIO.output(buzz_pin, GPIO.HIGH) # Turn on
-	time.sleep(.5)
+	sleep(.2)
 	GPIO.output(buzz_pin, GPIO.LOW) # Turn off	
 
 	GPIO.cleanup()

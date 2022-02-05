@@ -4,10 +4,9 @@ import time
 import RPi.GPIO as GPIO
 from datetime import datetime
 
+backlight_button = 7
 enter_button = 12
 select_button = 11
-buzz_pin = 13
-led_pin = 22 # LED light
 
 if __name__ == '__main__':
 	# initialisieren
@@ -15,29 +14,21 @@ if __name__ == '__main__':
 	GPIO.setmode(GPIO.BOARD)
 
 	# blinking light
+	GPIO.setup(backlight_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(enter_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 	GPIO.setup(select_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-	GPIO.setup(led_pin, GPIO.OUT, initial=GPIO.LOW)
-	GPIO.setup(buzz_pin, GPIO.OUT, initial=GPIO.LOW)
 
-
-	GPIO.output(led_pin, GPIO.HIGH) # Turn on
-	time.sleep(1)
-	GPIO.output(led_pin, GPIO.LOW) # Turn off
-	
 	while True:
+		if not GPIO.input(backlight_button):
+			print('backlight')
+			sys.stdout.flush()
 		if not GPIO.input(enter_button):
 			print('enter')
-			GPIO.output(led_pin, GPIO.HIGH) # Turn on
-		else:
-			GPIO.output(led_pin, GPIO.LOW) # Turn off
-
+			sys.stdout.flush()
 		if not GPIO.input(select_button):
 			print('select')
-			GPIO.output(buzz_pin, GPIO.HIGH) # Turn on
-		else:
-			GPIO.output(buzz_pin, GPIO.LOW) # Turn off
-
+			sys.stdout.flush()
 		time.sleep(.1)
+	GPIO.output(button_pin, GPIO.LOW) # Turn off	
 
 	GPIO.cleanup()

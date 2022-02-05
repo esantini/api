@@ -1,12 +1,16 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
-const senseHat = require('./senseHat');
 const express = require('express');
+
+const senseHat = require('./senseHat');
+const videoStream = require('./videoStream');
 const {
   getMessage,
   getWeddingMessages,
   init: dbInit,
 } = require('./database');
 const {
+  getLight,
+  setLight,
   processMessage,
   processWeddingMessage,
 } = require('./utils');
@@ -42,10 +46,6 @@ if (config.senseHatEnabled) {
   );
 }
 
-app.listen(app.get('port'), () => {
-  console.log(`Find the server at: http://localhost:${app.get('port')}/`); // eslint-disable-line no-console
-});
-
 app.post('/api/wedding-message', (req, res) => {
   if (req.body?.message) {
     processWeddingMessage(req);
@@ -63,4 +63,22 @@ app.post('/api/message', (req, res) => {
     processMessage(req);
   }
   res.sendStatus(200);
+});
+
+// app.post('/api/light', (req, res) => {
+//   res.sendStatus(200);
+//   setLight(req.body?.status);
+// });
+app.get('/api/light', (req, res) => res.json({ light: getLight() }));
+
+videoStream.acceptConnections(app, {
+  width: 1280,
+  height: 720,
+  fps: 3,
+  encoding: 'JPEG',
+  quality: 7, //lower is faster
+}, '/api/stream.mp4', true);
+
+app.listen(app.get('port'), () => {
+  console.log(`Find the server at: http://localhost:${app.get('port')}/`); // eslint-disable-line no-console
 });

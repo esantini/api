@@ -4,6 +4,7 @@ const pythons = require('./python');
 const sendSMS = require('./sendSms');
 const sendEmail = require('./my-mailer').send;
 const constants = require('./constants');
+const lcd = require('./lcd_controller');
 
 const validateJsonWebhook = (request) => {
   // calculate the signature
@@ -24,29 +25,12 @@ const validateJsonWebhook = (request) => {
 
 exports.validateJsonWebhook = validateJsonWebhook;
 
-let notifProcess;
-const notify = () => {
-  if (notifProcess) {
-    pythons.beep();
-  }
-  else {
-    notifProcess = pythons.notify();
-  }
-}
-
-pythons.listenButton().stdout.on('data', (data) => {
-  console.log({data});
-  if (notifProcess) {
-    notifProcess.kill('SIGTERM');
-    notifProcess = null;
-  }
-});
-
 exports.processMessage = (req) => {
   const { message } = req.body;
   console.log(new Date(), ` setting message ${message}`);
-  notify();
-  pythons.text(message);
+  
+  lcd.showMessage(message);
+  
   addMessage({
     message,
     ip: req.headers['x-forwarded-for'],
@@ -54,7 +38,6 @@ exports.processMessage = (req) => {
   sendSMS(message);
 }
 
-exports.notify = notify;
 
 exports.processWeddingMessage = (req) => {
   const { name, message, email } = req.body;
@@ -79,3 +62,17 @@ exports.processWeddingMessage = (req) => {
     to: ['esantinie@gmail.com', 'ana.tamaurab@gmail.com'],
   });
 }
+
+let isLightOn = false;
+exports.setLight = value => {
+  // toggle if there is no value
+
+  isLightOn = value === undefined ? !isLightOn : value;
+
+  console.log({ isLightOn });
+
+  pythons.setLight(isLightOn).stdout.on('data', (data) => {
+    console.log({ data });
+  });
+}
+exports.getLight = () => isLightOn;
