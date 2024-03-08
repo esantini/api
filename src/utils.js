@@ -27,9 +27,9 @@ exports.validateJsonWebhook = (request) => {
 exports.processMessage = (req) => {
   const { message } = req.body;
   console.log(new Date(), ` setting message ${message}`);
-  
+
   lcd.showMessage(message);
-  
+
   addMessage({
     message,
     ip: req.headers['x-forwarded-for'],
@@ -63,15 +63,15 @@ exports.processWeddingMessage = (req) => {
 }
 
 let isLightOn = false;
-exports.setLight = value => {
+exports.setLight = (value, isVerbose = true) => {
   // toggle if there is no value
 
   isLightOn = value === undefined ? !isLightOn : value;
 
-  console.log({ isLightOn });
+  if (isVerbose) console.log(`Turning Light: ${isLightOn ? 'ON' : 'OFF'}`);
 
   pythons.setLight(isLightOn).stdout.on('data', (data) => {
-    console.log({ data });
+    // if (isVerbose) console.log({ data });
   });
 }
 exports.getLight = () => isLightOn;

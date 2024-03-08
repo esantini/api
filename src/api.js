@@ -7,7 +7,7 @@ const LokiStore = require('connect-loki')(session);
 const { OAuth2Client } = require('google-auth-library');
 
 const senseHat = require('./senseHat');
-const videoStream = require('./videoStream');
+const VideoStream = require('./videoStream');
 const { getMessage, getWeddingMessages, addUser } = require('./database');
 const {
   getLight,
@@ -125,13 +125,21 @@ app.post('/api/light', (req, res) => {
   res.sendStatus(200);
   setLight(req.body?.status);
 });
+// On Start Up: blink 3 times
+setTimeout(() => setLight(true, false), 1000);
+setTimeout(() => setLight(false, false), 1200);
+setTimeout(() => setLight(true, false), 1400);
+setTimeout(() => setLight(false, false), 1600);
+setTimeout(() => setLight(true, false), 1800);
+setTimeout(() => setLight(false, false), 2000);
 
 app.get('/api/light', (req, res) => res.json({ light: getLight() }));
 
+const videoStream = new VideoStream();
 videoStream.acceptConnections(app, {
   width: 1280,
   height: 720,
-  fps: 3,
+  fps: 16,
   encoding: 'JPEG',
   quality: 7, //lower is faster
 }, '/api/stream.mp4', true);
