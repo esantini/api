@@ -121,10 +121,11 @@ app.post('/api/message', (req, res) => {
   res.sendStatus(200);
 });
 
-// app.post('/api/light', (req, res) => {
-//   res.sendStatus(200);
-//   setLight(req.body?.status);
-// });
+app.post('/api/light', (req, res) => {
+  res.sendStatus(200);
+  setLight(req.body?.status);
+});
+
 app.get('/api/light', (req, res) => res.json({ light: getLight() }));
 
 videoStream.acceptConnections(app, {
