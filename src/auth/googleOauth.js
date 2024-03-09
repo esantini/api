@@ -1,7 +1,6 @@
 const { OAuth2Client } = require('google-auth-library');
-const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const LokiStore = require('connect-loki')(session);
+const jwt = require('jsonwebtoken');
 const { addUser } = require('../database');
 
 const googleOauth = (app) => {
@@ -10,25 +9,9 @@ const googleOauth = (app) => {
     const client = new OAuth2Client(config.oauth.web.client_id);
 
     app.use(cookieParser());
-    const sOptions = {
-      secret: config.sessionSecret,
-      store: new LokiStore({
-        path: config.database,
-      }),
-      saveUninitialized: true,
-      resave: false,
-      cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      }
-    };
-    if (config.ssl) {
-      app.set('trust proxy', 1);
-      sOptions.cookie.secure = true;
-    }
-    app.use(session(sOptions));
 
-    app.post("/api/auth/google", async (req, res) => {
-      const { body: { idToken }, session } = req;
+    app.post('/api/auth/google', async (req, res) => {
+      const { body: { idToken } } = req;
       const ticket = await client.verifyIdToken({
         idToken,
         audience: process.env.CLIENT_ID,
@@ -41,27 +24,30 @@ const googleOauth = (app) => {
       const { whitelist } = config.oauth;
       if (whitelist.indexOf(email) !== -1) {
         addUser(user);
-        session.cookie.user = user;
-        res.status(201);
-        res.json(user);
+
+        const token = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
+        res.cookie('token', token, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
+        res.status(201).json(user);
       } else {
-        res.status(418);
-        res.json({ msg: 'you must be whitelisted' });
+        res.status(418).json({ msg: 'you must be whitelisted' });
       }
     });
 
-    app.delete("/api/auth/logout", async (req, res) => {
-      await req.session.destroy();
-      res.status(200);
-      res.json({
-        msg: "Logged out successfully"
-      });
+    app.delete('/api/auth/logout', (req, res) => {
+      res.clearCookie('token');
+      res.status(200).json({ msg: 'Logged out successfully' });
     });
 
-    app.get("/api/me", async (req, res) => {
-      const { user } = req.session.cookie;
-      res.status(200);
-      res.json(user ? user : null);
+    app.get('/api/me', (req, res) => {
+      try {
+        const { token } = req.cookies;
+        if (!token) return res.status(200);
+        const { name, picture } = jwt.verify(token, config.tokenSecret);
+        res.status(200).json({ name, picture });
+      } catch (error) {
+        res.clearCookie('token');
+        res.status(401).json({ msg: 'Unauthorized' });
+      }
     });
   }
 }

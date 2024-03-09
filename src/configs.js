@@ -1,4 +1,6 @@
-// These settings have lower priority than those in privateConfig.json
+
+// These are public configurations set into the global 'config' object
+// They will be combined and replaced (if duplicate) by those in privateConfig.json
 module.exports = {
   default: {
     env: 'dev',

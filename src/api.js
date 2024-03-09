@@ -78,7 +78,7 @@ const videoStream = new VideoStream();
 videoStream.acceptConnections(app, {
   width: 1280,
   height: 720,
-  fps: 16,
+  fps: 4,
   encoding: 'JPEG',
   quality: 7, //lower is faster
 }, '/api/stream.mp4', true);
