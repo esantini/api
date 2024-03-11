@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const { addWeddingMessage, addMessage } = require('./database');
 const pythons = require('./python');
 const sendSMS = require('./sendSms');
@@ -75,3 +76,14 @@ exports.setLight = (value, isVerbose = true) => {
   });
 }
 exports.getLight = () => isLightOn;
+
+// TODO whitelist from DB
+exports.getIsWhitelisted = (req) => {
+  const { token } = req.cookies;
+  if (!token) return false;
+
+  const { whitelist } = config.oauth;
+  const { email } = jwt.verify(token, config.tokenSecret);
+
+  return whitelist.indexOf(email) !== -1;
+}

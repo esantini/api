@@ -20,34 +20,17 @@ const googleOauth = (app) => {
       const { name, email, picture } = ticket.getPayload();
       const user = { name, email, picture };
 
-      // TODO whitelist from DB
-      const { whitelist } = config.oauth;
-      if (whitelist.indexOf(email) !== -1) {
-        addUser(user);
+      addUser(user);
 
-        const token = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
-        res.cookie('token', token, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
-        res.status(201).json(user);
-      } else {
-        res.status(418).json({ msg: 'you must be whitelisted' });
-      }
+      const token = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
+      res.cookie('token', token, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
+      const isWhitelisted = config.oauth.whitelist.indexOf(email) !== -1;
+      res.status(200).json({ name, picture, isWhitelisted });
     });
 
     app.delete('/api/auth/logout', (req, res) => {
       res.clearCookie('token');
       res.status(200).json({ msg: 'Logged out successfully' });
-    });
-
-    app.get('/api/me', (req, res) => {
-      try {
-        const { token } = req.cookies;
-        if (!token) return res.status(200);
-        const { name, picture } = jwt.verify(token, config.tokenSecret);
-        res.status(200).json({ name, picture });
-      } catch (error) {
-        res.clearCookie('token');
-        res.status(401).json({ msg: 'Unauthorized' });
-      }
     });
   }
 }

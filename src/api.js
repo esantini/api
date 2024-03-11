@@ -1,10 +1,12 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
 const express = require('express');
+const jwt = require('jsonwebtoken');
 
 const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
 const { getMessage, getWeddingMessages } = require('./database');
 const myGoogleOauth = require('./auth/googleOauth');
+const { getIsWhitelisted } = require('./utils');
 
 const {
   getLight,
@@ -27,6 +29,19 @@ if (IS_PROD) {
 }
 
 myGoogleOauth(app);
+
+app.get('/api/me', (req, res) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) return res.status(200).json({});
+    const { name, picture } = jwt.verify(token, config.tokenSecret);
+    res.status(200).json({ name, picture, isWhitelisted: getIsWhitelisted(req) });
+  } catch (error) {
+    console.log('/api/me', { error });
+    res.clearCookie('token');
+    res.status(401).json({ msg: 'Unauthorized' });
+  }
+});
 
 // disable sense-HAT in 'config.json'
 if (config.senseHatEnabled) {
@@ -75,13 +90,7 @@ setTimeout(() => setLight(false, false), 1000);
 app.get('/api/light', (req, res) => res.json({ light: getLight() }));
 
 const videoStream = new VideoStream();
-videoStream.acceptConnections(app, {
-  width: 1280,
-  height: 720,
-  fps: 4,
-  encoding: 'JPEG',
-  quality: 7, //lower is faster
-}, '/api/stream.mp4', true);
+videoStream.acceptConnections(app, '/api/stream.mp4', true);
 
 app.listen(app.get('port'), () => {
   console.log(`Find the server at: http://localhost:${app.get('port')}/`); // eslint-disable-line no-console

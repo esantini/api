@@ -1,4 +1,6 @@
 const pythons = require('./python');
+const { getIsWhitelisted } = require('./utils');
+
 class VideoStream {
   constructor() {
     this.counter = 0;
@@ -27,40 +29,50 @@ class VideoStream {
     }
   }
 
-  acceptConnections(expressApp, cameraOptions, resourcePath, isVerbose) {
+  acceptConnections(expressApp, resourcePath, isVerbose) {
     const raspberryPiCamera = require('raspberry-pi-camera-native');
     this.isVerbose = isVerbose;
 
-    raspberryPiCamera.start(cameraOptions);
+    raspberryPiCamera.start({
+      width: 1280,
+      height: 720,
+      fps: 4,
+      encoding: 'JPEG',
+      quality: 4, // lower is faster
+    });
     if (this.isVerbose) console.log('Camera started.');
 
     expressApp.get(resourcePath, (req, res) => {
-      res.writeHead(200, {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
-        Pragma: 'no-cache',
-        Connection: 'close',
-        'Content-Type': 'multipart/x-mixed-replace; boundary=--myboundary'
-      });
-      if (this.isVerbose) console.log('Accepting connection: ' + req.hostname);
+      if (getIsWhitelisted(req)) {
+        res.writeHead(200, {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
+          Pragma: 'no-cache',
+          Connection: 'close',
+          'Content-Type': 'multipart/x-mixed-replace; boundary=--myboundary'
+        });
+        if (this.isVerbose) console.log('Accepting connection: ' + req.hostname);
 
-      this.addCounter();
+        this.addCounter();
 
-      let isReady = true;
-      let frameHandler = (frameData) => {
-        if (!isReady) return;
-        isReady = false;
+        let isReady = true;
+        let frameHandler = (frameData) => {
+          if (!isReady) return;
+          isReady = false;
 
-        res.write(`--myboundary\nContent-Type: image/jpg\nContent-length: ${frameData.length}\n\n`);
-        res.write(frameData, () => isReady = true);
+          res.write(`--myboundary\nContent-Type: image/jpg\nContent-length: ${frameData.length}\n\n`);
+          res.write(frameData, () => isReady = true);
+        }
+
+        const frameEmitter = raspberryPiCamera.on('frame', frameHandler);
+
+        req.on('close', () => {
+          frameEmitter.removeListener('frame', frameHandler);
+          this.subCounter();
+          if (this.isVerbose) console.log('Connection terminated: ' + req.hostname);
+        });
+      } else {
+        res.status(418).json({ msg: 'you must be whitelisted' });
       }
-
-      const frameEmitter = raspberryPiCamera.on('frame', frameHandler);
-
-      req.on('close', () => {
-        frameEmitter.removeListener('frame', frameHandler);
-        this.subCounter();
-        if (this.isVerbose) console.log('Connection terminated: ' + req.hostname);
-      });
     });
   }
 }
