@@ -1,5 +1,8 @@
 const pythons = require('./python');
 const { getIsWhitelisted } = require('./utils');
+const raspberryPiCamera = require('raspberry-pi-camera-native');
+
+let isStarted = false;
 
 class VideoStream {
   constructor() {
@@ -10,40 +13,59 @@ class VideoStream {
 
   addCounter() {
     this.counter++;
+
+    if (this.counter === 1) {
+      pythons.setLight(true);
+      if (isStarted) {
+        raspberryPiCamera.resume(() => {
+          if (isVerbose) console.log('Camera resumed.');
+        });
+      } else {
+        isStarted = true;
+      }
+    }
     if (this.counter >= 1) {
       pythons.beep(0.1);
-      pythons.setLight(true);
       if (!this.counterReport && this.isVerbose) {
         this.counterReport = setInterval(() => {
           console.log(`People watching: ${this.counter}`);
         }, 10000);
       }
     }
+    if (this.counter > 1 && this.isVerbose) {
+      console.log(`1 more watching: ${this.counter}`);
+    }
   }
 
   subCounter() {
-    this.counter--;
+    this.counter--; // TODO test if (--this.counter) works
     if (this.counter === 0) {
       pythons.setLight(false);
+      raspberryPiCamera.pause(() => {
+        if (isVerbose) console.log('Camera paused.');
+      });
+      console.log(`People watching: ${this.counter}`);
       if (this.counterReport) clearInterval(this.counterReport);
     }
   }
 
   acceptConnections(expressApp, resourcePath, isVerbose) {
-    const raspberryPiCamera = require('raspberry-pi-camera-native');
     this.isVerbose = isVerbose;
-
-    raspberryPiCamera.start({
-      width: 1280,
-      height: 720,
-      fps: 4,
-      encoding: 'JPEG',
-      quality: 4, // lower is faster
-    });
-    if (this.isVerbose) console.log('Camera started.');
 
     expressApp.get(resourcePath, (req, res) => {
       if (getIsWhitelisted(req)) {
+        if (!isStarted) {
+          raspberryPiCamera.start({
+            width: 1280,
+            height: 720,
+            fps: 4,
+            encoding: 'JPEG',
+            quality: 4, // lower is faster
+          }, () => {
+            if (this.isVerbose) console.log('Camera started.');
+          });
+        }
+        this.addCounter();
         res.writeHead(200, {
           'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
           Pragma: 'no-cache',
@@ -51,8 +73,6 @@ class VideoStream {
           'Content-Type': 'multipart/x-mixed-replace; boundary=--myboundary'
         });
         if (this.isVerbose) console.log('Accepting connection: ' + req.hostname);
-
-        this.addCounter();
 
         let isReady = true;
         let frameHandler = (frameData) => {
