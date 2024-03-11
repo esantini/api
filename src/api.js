@@ -6,12 +6,11 @@ const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
 const { getMessage, getWeddingMessages } = require('./database');
 const myGoogleOauth = require('./auth/googleOauth');
-const { getIsWhitelisted } = require('./utils');
-
 const {
   getLight,
   setLight,
   processMessage,
+  getIsWhitelisted,
   processWeddingMessage,
 } = require('./utils');
 

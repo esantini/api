@@ -1,4 +1,4 @@
-const pythons = require('./python');
+const pythons = require('../python');
 
 let lcdProcess = pythons.sayHello();
 
@@ -28,9 +28,9 @@ const backlightButton = () => {
 
 setTimeout(() => {
   lcdProcess = pythons.showStats();
-  
+
   pythons.listenButtons().stdout.on('data', (data) => {
-  
+
     switch (data.toString().trim()) {
       case 'backlight':
         backlightButton();
@@ -41,7 +41,7 @@ setTimeout(() => {
       case 'select':
         console.log('select');
         break;
-    
+
       default:
         break;
     }
