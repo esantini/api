@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { addWeddingMessage, addMessage } = require('./database');
 const pythons = require('./python');
-const sendSMS = require('./sendSms');
 const sendEmail = require('./my-mailer').send;
 const constants = require('./constants');
 const lcd = require('./lcd_controller');
@@ -35,9 +34,16 @@ exports.processMessage = (req) => {
     message,
     ip: req.headers['x-forwarded-for'],
   });
-  sendSMS(message);
+  // sendSMS(message);
+  if (config.email?.enabled) {
+    sendEmail({
+      from: 'e-Santini <no-reply@esantini.com>',
+      subject: 'e-Santini Message',
+      to: config.email?.myAddress,
+      text: `<h2>New Message!</h2> ${message}`,
+    });
+  }
 }
-
 
 exports.processWeddingMessage = (req) => {
   const { name, message, email } = req.body;
@@ -49,7 +55,7 @@ exports.processWeddingMessage = (req) => {
   });
   sendSMS(`FROM: ${name}. MSG: ${message}`);
   sendEmail({
-    from: "Ana Karen & Esteban <no-reply@esantini.com>",
+    from: 'Ana Karen & Esteban <no-reply@esantini.com>',
     subject: constants.emails.weddingGracias.subject,
     to: email,
     text: `<h2>Hola ${name}!</h2> ${constants.emails.weddingGracias.text}`,
@@ -57,7 +63,7 @@ exports.processWeddingMessage = (req) => {
 
   sendEmail({
     from: `${name.trim()} <no-reply@esantini.com>`,
-    subject: `Felicitaciones!`,
+    subject: 'Felicitaciones!',
     text: `De: ${name} <br />${email ? `Email: ${email}<br />` : ''}<br /> ${message.replace(/(?:\r\n|\r|\n)/g, '<br />')}`,
     to: ['esantinie@gmail.com', 'ana.tamaurab@gmail.com'],
   });
