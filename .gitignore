@@ -8,3 +8,4 @@ devDatabase.db
 privateConfig.json
 access.log
 src/python/__pycache__/*
+.vscode/settings.json

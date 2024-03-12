@@ -19,7 +19,8 @@
     "raspberry-pi-camera-native": "^0.0.0",
     "sense-hat-led": "^1.2.0",
     "shelljs": "^0.8.4",
-    "twilio": "^3.56.0"
+    "twilio": "^3.56.0",
+    "ws": "^8.16.0"
   },
   "scripts": {
     "dev": "./node_modules/nodemon/bin/nodemon.js --watch ./src ./src/api.js",

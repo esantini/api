@@ -14,6 +14,8 @@ const {
   processWeddingMessage,
 } = require('./utils');
 
+require('./webSocket');
+
 const IS_PROD = config.env === 'prod';
 console.log({ IS_PROD });
 
