@@ -2,13 +2,20 @@ const pythons = require('./python');
 const { getIsWhitelisted } = require('./utils');
 const raspberryPiCamera = require('raspberry-pi-camera-native');
 
-let isStarted = false;
-
 class VideoStream {
   constructor() {
     this.counter = 0;
     this.counterReport = null;
     this.isVerbose = false;
+    raspberryPiCamera.start({
+      width: 1280,
+      height: 720,
+      fps: 4,
+      encoding: 'JPEG',
+      quality: 4, // lower is faster
+    }, () => {
+      if (this.isVerbose) console.log('Camera started.');
+    });
   }
 
   addCounter() {
@@ -16,13 +23,6 @@ class VideoStream {
 
     if (this.counter === 1) {
       pythons.setLight(true);
-      if (isStarted) {
-        raspberryPiCamera.resume(() => {
-          if (isVerbose) console.log('Camera resumed.');
-        });
-      } else {
-        isStarted = true;
-      }
     }
     if (this.counter >= 1) {
       pythons.beep(0.1);
@@ -41,9 +41,6 @@ class VideoStream {
     this.counter--; // TODO test if (--this.counter) works
     if (this.counter === 0) {
       pythons.setLight(false);
-      raspberryPiCamera.pause(() => {
-        if (isVerbose) console.log('Camera paused.');
-      });
       console.log(`People watching: ${this.counter}`);
       if (this.counterReport) clearInterval(this.counterReport);
     }
@@ -54,17 +51,6 @@ class VideoStream {
 
     expressApp.get(resourcePath, (req, res) => {
       if (getIsWhitelisted(req)) {
-        if (!isStarted) {
-          raspberryPiCamera.start({
-            width: 1280,
-            height: 720,
-            fps: 4,
-            encoding: 'JPEG',
-            quality: 4, // lower is faster
-          }, () => {
-            if (this.isVerbose) console.log('Camera started.');
-          });
-        }
         this.addCounter();
         res.writeHead(200, {
           'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
