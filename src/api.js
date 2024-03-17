@@ -1,6 +1,7 @@
 require('./init.js'); // Sets global.config from api/config.json && privateConfig.json
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const geoip = require('geoip-lite');
 
 const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
@@ -57,6 +58,17 @@ if (config.senseHatEnabled) {
     res.json({ msg: 'Sense-HAT not Available' })
   );
 }
+
+
+app.post('/api/event', (req, res) => {
+  const { type, details } = req.body;
+  const ip = req.ip;
+  const geo = geoip.lookup(ip);
+
+  // console.log({ type, details, geo });
+
+  res.sendStatus(200);
+});
 
 app.post('/api/wedding-message', (req, res) => {
   if (req.body?.message) {
