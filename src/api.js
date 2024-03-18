@@ -5,7 +5,7 @@ const geoip = require('geoip-lite');
 
 const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
-const { getMessage, getWeddingMessages } = require('./database');
+const { getMessage, getWeddingMessages, addEvent, addSession, getSessions } = require('./database');
 const myGoogleOauth = require('./auth/googleOauth');
 const {
   getLight,
@@ -59,15 +59,22 @@ if (config.senseHatEnabled) {
   );
 }
 
-
 app.post('/api/event', (req, res) => {
-  const { type, details } = req.body;
+  const { type, details, sessionId } = req.body;
   const ip = req.ip;
-  const geo = geoip.lookup(ip);
 
-  // console.log({ type, details, geo });
+  const geo = ip.startsWith('::ffff') ? {} : geoip.lookup(ip);
+
+  const session = addSession({ sessionId, geo });
+  addEvent({ type, details, sessionId: session.$loki, timestamp: new Date() });
 
   res.sendStatus(200);
+});
+app.get('/api/event', (req, res) => {
+  res.json({ msg: 'Events not Available' });
+});
+app.get('/api/sessions', (req, res) => {
+  res.json(getSessions());
 });
 
 app.post('/api/wedding-message', (req, res) => {

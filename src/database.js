@@ -8,6 +8,7 @@ const db = new loki(config.database, {
 });
 let messages;
 let users;
+let events;
 let weddingMessages;
 let initCallback = () => { };
 
@@ -20,6 +21,14 @@ function databaseInitialize() {
   users = db.getCollection('users');
   if (users === null) {
     users = db.addCollection('users');
+  }
+  events = db.getCollection('events');
+  if (events === null) {
+    events = db.addCollection('events');
+  }
+  sessions = db.getCollection('sessions');
+  if (sessions === null) {
+    sessions = db.addCollection('sessions');
   }
   weddingMessages = db.getCollection('weddingMessages');
   if (weddingMessages === null) {
@@ -36,6 +45,30 @@ function runProgramLogic() {
   console.log(`Newest message: ${getMessage()}`);
   initCallback();
 }
+
+const addSession = ({ sessionId, geo }) => {
+  // Check if the session exists, if not create a new one
+  let session = sessions.findOne({ sessionId });
+  if (!session) {
+    console.log('new session', new Date());
+    session = sessions.insert({ sessionId, geo, timestamp: new Date() });
+  }
+  return session;
+};
+const addEvent = (event) => {
+  events.insert(event);
+};
+const getSessions = () => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Find sessions where the timestamp is greater than sevenDaysAgo
+  return sessions.find({
+    'timestamp': {
+      '$gte': sevenDaysAgo
+    }
+  }).map(({ timestamp, geo }) => ({ timestamp, geo }));
+};
 
 const addMessage = (message) => messages.insert(message);
 const getMessage = () => messages.where(() => true)[0]?.message;
@@ -57,6 +90,9 @@ module.exports = {
   addMessage,
   addUser,
   getUser,
+  addEvent,
+  addSession,
+  getSessions,
   getMessage,
   addWeddingMessage,
   getWeddingMessages,
