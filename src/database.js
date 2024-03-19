@@ -30,6 +30,8 @@ function databaseInitialize() {
   if (sessions === null) {
     sessions = db.addCollection('sessions');
   }
+  // events.clear();
+  // sessions.clear();
   weddingMessages = db.getCollection('weddingMessages');
   if (weddingMessages === null) {
     weddingMessages = db.addCollection('weddingMessages');
@@ -50,24 +52,30 @@ const addSession = ({ sessionId, geo }) => {
   // Check if the session exists, if not create a new one
   let session = sessions.findOne({ sessionId });
   if (!session) {
-    console.log('new session', new Date());
-    session = sessions.insert({ sessionId, geo, timestamp: new Date() });
+    const timestamp = new Date();
+    console.log('New Session:', timestamp.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    session = sessions.insert({ sessionId, geo, timestamp });
   }
   return session;
 };
 const addEvent = (event) => {
   events.insert(event);
 };
-const getSessions = () => {
+const getSessions = (hasGeo = true) => {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Find sessions where the timestamp is greater than sevenDaysAgo
-  return sessions.find({
-    'timestamp': {
+  const findObj = {
+    timestamp: {
       '$gte': sevenDaysAgo
-    }
-  }).map(({ timestamp, geo }) => ({ timestamp, geo }));
+    },
+  }
+  if (hasGeo) {
+    findObj.geo = { '$ne': null };
+  }
+
+  // Find sessions where the timestamp is greater than sevenDaysAgo
+  return sessions.find(findObj).map(({ timestamp, geo }) => ({ timestamp, geo }));
 };
 
 const addMessage = (message) => messages.insert(message);

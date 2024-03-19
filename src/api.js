@@ -23,6 +23,7 @@ console.log({ IS_PROD });
 const app = express();
 app.use(express.json());
 app.set('port', config.apiPort);
+app.set('trust proxy', true);
 
 if (IS_PROD) {
   // Express only serves static assets in production
@@ -63,7 +64,7 @@ app.post('/api/event', (req, res) => {
   const { type, details, sessionId } = req.body;
   const ip = req.ip;
 
-  const geo = ip.startsWith('::ffff') ? {} : geoip.lookup(ip);
+  const geo = geoip.lookup(ip);
 
   const session = addSession({ sessionId, geo });
   addEvent({ type, details, sessionId: session.$loki, timestamp: new Date() });
@@ -74,7 +75,8 @@ app.get('/api/event', (req, res) => {
   res.json({ msg: 'Events not Available' });
 });
 app.get('/api/sessions', (req, res) => {
-  res.json(getSessions());
+  const hasGeo = req.query.hasGeo === 'true';
+  res.json(getSessions(hasGeo));
 });
 
 app.post('/api/wedding-message', (req, res) => {
