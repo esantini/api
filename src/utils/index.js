@@ -3,6 +3,7 @@ const { processMessage } = require('./messageUtils.js');
 const { processWeddingMessage } = require('./weddingUtils');
 const { getLight, setLight } = require('./lightUtils');
 const { getIsWhitelisted } = require('./whitelistUtils');
+const { sendEmail } = require('./emailUtils');
 
 module.exports = {
   validateJsonWebhook,
@@ -11,4 +12,5 @@ module.exports = {
   setLight,
   getLight,
   getIsWhitelisted,
+  sendEmail,
 };
