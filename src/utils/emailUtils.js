@@ -31,15 +31,14 @@ const getMessage = async ({
   return { from, to, subject, html };
 }
 
-const sendEmail = async (emailObj) => {
+const sendEmail = async (emailObj, isVerbose) => {
   if (!config.email.enabled) return console.log('"Sending" email: ', emailObj.subject);
 
   const message = await getMessage(emailObj);
-  console.log("Sending email: ", emailObj.subject);
 
-  mailgun.messages().send(message, (error, body) => {
+  mailgun.messages().send(message, (error) => {
     if (error) throw error;
-    console.log('Mail Sent: ', body.id);
+    if (isVerbose) console.log('Mail Sent: ', emailObj.subject);
   });
 }
 

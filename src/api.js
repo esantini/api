@@ -5,7 +5,14 @@ const geoip = require('geoip-lite');
 
 const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
-const { getMessage, getWeddingMessages, addEvent, addSession, getSessions } = require('./database');
+const {
+  getMessage,
+  getWeddingMessages,
+  addEvent,
+  addSession,
+  getSessions,
+  getWorldPoints,
+} = require('./database');
 const myGoogleOauth = require('./auth/googleOauth');
 const {
   getLight,
@@ -77,6 +84,10 @@ app.get('/api/event', (req, res) => {
 app.get('/api/sessions', (req, res) => {
   const hasGeo = req.query.hasGeo === 'true';
   res.json(getSessions(hasGeo));
+});
+app.get('/api/worldpoints', (req, res) => {
+  const days = req.query.days || 7;
+  res.json(getWorldPoints(days));
 });
 
 app.post('/api/wedding-message', (req, res) => {

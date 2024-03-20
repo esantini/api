@@ -1,4 +1,5 @@
 const loki = require('lokijs');
+const { sendEmail } = require('./utils/emailUtils');
 
 const db = new loki(config.database, {
   autoload: true,
@@ -48,12 +49,19 @@ function runProgramLogic() {
   initCallback();
 }
 
-const addSession = ({ sessionId, geo }) => {
+const addSession = ({ sessionId, geo = {} }) => {
   // Check if the session exists, if not create a new one
   let session = sessions.findOne({ sessionId });
   if (!session) {
     const timestamp = new Date();
-    console.log('New Session:', timestamp.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+    const localTime = timestamp.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
+    sendEmail({
+      to: config.email.sessionSubscribers,
+      subject: 'New Session',
+      text: `New Session from ${geo.city}, ${geo.region}, ${geo.country}<br />Date: ${localTime}`
+    });
+    console.log('New Session:', localTime);
+
     session = sessions.insert({ sessionId, geo, timestamp });
   }
   return session;
@@ -61,21 +69,24 @@ const addSession = ({ sessionId, geo }) => {
 const addEvent = (event) => {
   events.insert(event);
 };
-const getSessions = (hasGeo = true) => {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+const getWorldPoints = (daysAgo = 7) => {
+  const dateDaysAgo = new Date();
+  dateDaysAgo.setDate(dateDaysAgo.getDate() - daysAgo);
 
   const findObj = {
-    timestamp: {
-      '$gte': sevenDaysAgo
-    },
-  }
-  if (hasGeo) {
-    findObj.geo = { '$ne': null };
+    timestamp: { '$gte': dateDaysAgo },
+    geo: { '$ne': null },
   }
 
-  // Find sessions where the timestamp is greater than sevenDaysAgo
-  return sessions.find(findObj).map(({ timestamp, geo }) => ({ timestamp, geo }));
+  // Find sessions where the timestamp is greater than dateDaysAgo
+  return sessions.find(findObj).map(({ geo }) => geo.ll);
+};
+const getSessions = (daysAgo = 7) => {
+  const dateDaysAgo = new Date();
+  dateDaysAgo.setDate(dateDaysAgo.getDate() - daysAgo);
+
+  // Find sessions where the timestamp is greater than dateDaysAgo
+  return sessions.find({ timestamp: { '$gte': dateDaysAgo } });
 };
 
 const addMessage = (message) => messages.insert(message);
@@ -102,6 +113,7 @@ module.exports = {
   addSession,
   getSessions,
   getMessage,
+  getWorldPoints,
   addWeddingMessage,
   getWeddingMessages,
 };
