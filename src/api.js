@@ -12,6 +12,7 @@ const {
   getEvents,
   addSession,
   getSessions,
+  deleteSession,
   getWorldPoints,
 } = require('./database');
 const myGoogleOauth = require('./auth/googleOauth');
@@ -90,6 +91,15 @@ app.get('/api/event', (req, res) => {
 });
 app.get('/api/sessions', (req, res) => {
   res.json(getSessions());
+});
+app.delete('/api/sessions', (req, res) => {
+  const id = parseInt(req.query.id);
+  if (getIsAdmin(req) && id > -1) {
+    deleteSession(id);
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(401);
+  }
 });
 app.get('/api/worldpoints', (req, res) => {
   const days = req.query.days || 7;

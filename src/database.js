@@ -1,6 +1,5 @@
 const loki = require('lokijs');
 const { sendEmail } = require('./utils/emailUtils');
-const { getIsAdmin } = require('./utils/accessUtils');
 
 const db = new loki(config.database, {
   autoload: true,
@@ -67,6 +66,11 @@ const addSession = ({ sessionId, geo = {} }) => {
   }
   return session;
 };
+const deleteSession = (sessionId) => {
+  // delete events and session with sessionId
+  events.findAndRemove({ sessionId });
+  sessions.findAndRemove({ $loki: sessionId });
+};
 
 const addEvent = (event) => {
   events.insert(event);
@@ -116,6 +120,7 @@ module.exports = {
   getEvents,
   addSession,
   getSessions,
+  deleteSession,
   getMessage,
   getWorldPoints,
   addWeddingMessage,
