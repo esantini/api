@@ -9,6 +9,7 @@ const {
   getMessage,
   getWeddingMessages,
   addEvent,
+  getEvents,
   addSession,
   getSessions,
   getWorldPoints,
@@ -18,6 +19,7 @@ const {
   getLight,
   setLight,
   processMessage,
+  getIsAdmin,
   getIsWhitelisted,
   processWeddingMessage,
 } = require('./utils');
@@ -45,7 +47,12 @@ app.get('/api/me', (req, res) => {
     const { token } = req.cookies;
     if (!token) return res.status(200).json({});
     const { name, picture } = jwt.verify(token, config.tokenSecret);
-    res.status(200).json({ name, picture, isWhitelisted: getIsWhitelisted(req) });
+    res.status(200).json({
+      name,
+      picture,
+      isWhitelisted: getIsWhitelisted(req),
+      isAdmin: getIsAdmin(req),
+    });
   } catch (error) {
     console.log('/api/me', { error });
     res.clearCookie('token');
@@ -79,11 +86,10 @@ app.post('/api/event', (req, res) => {
   res.sendStatus(200);
 });
 app.get('/api/event', (req, res) => {
-  res.json({ msg: 'Events not Available' });
+  res.json(getEvents());
 });
 app.get('/api/sessions', (req, res) => {
-  const hasGeo = req.query.hasGeo === 'true';
-  res.json(getSessions(hasGeo));
+  res.json(getSessions());
 });
 app.get('/api/worldpoints', (req, res) => {
   const days = req.query.days || 7;

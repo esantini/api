@@ -5,17 +5,13 @@ const configs = require('./configs');
 const template = {
   default: {
     sessionSecret: 'changeThis', // secret in cookie sessions
-    oauth: {},
+    oauth: {
+      whitelist: [], // list of emails that can access the camera and other features
+      admin: [], // list of admin emails
+    },
   },
   production: {
     api_key: '', // DON'T PUT API KEYS HERE, set values in privateConfig.json
-    smsEnabled: false,
-    twilio: {
-      authToken: '',
-      accountSid: '',
-      fromNumber: '',
-      phoneNumber: '',
-    },
   },
 };
 

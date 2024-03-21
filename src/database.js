@@ -1,5 +1,6 @@
 const loki = require('lokijs');
 const { sendEmail } = require('./utils/emailUtils');
+const { getIsAdmin } = require('./utils/accessUtils');
 
 const db = new loki(config.database, {
   autoload: true,
@@ -66,9 +67,11 @@ const addSession = ({ sessionId, geo = {} }) => {
   }
   return session;
 };
+
 const addEvent = (event) => {
   events.insert(event);
 };
+const getEvents = () => events.data;
 const getWorldPoints = (daysAgo = 7) => {
   const dateDaysAgo = new Date();
   dateDaysAgo.setDate(dateDaysAgo.getDate() - daysAgo);
@@ -110,6 +113,7 @@ module.exports = {
   addUser,
   getUser,
   addEvent,
+  getEvents,
   addSession,
   getSessions,
   getMessage,

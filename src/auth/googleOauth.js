@@ -25,7 +25,8 @@ const googleOauth = (app) => {
       const token = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
       res.cookie('token', token, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
       const isWhitelisted = config.oauth.whitelist.indexOf(email) !== -1;
-      res.status(200).json({ name, picture, isWhitelisted });
+      const isAdmin = config.oauth.admin.indexOf(email) !== -1;
+      res.status(200).json({ name, picture, isWhitelisted, isAdmin });
     });
 
     app.delete('/api/auth/logout', (req, res) => {
