@@ -19,6 +19,7 @@ const myGoogleOauth = require('./auth/googleOauth');
 const {
   getLight,
   setLight,
+  sendEmail,
   processMessage,
   getIsAdmin,
   getIsWhitelisted,
@@ -55,9 +56,14 @@ app.get('/api/me', (req, res) => {
       isAdmin: getIsAdmin(req),
     });
   } catch (error) {
-    console.log('/api/me', { error });
     res.clearCookie('token');
-    res.status(401).json({ msg: 'Unauthorized' });
+    if (error.name === 'TokenExpiredError') {
+      res.status(200).json(null);
+    } else {
+      console.log('/api/me', { error });
+      sendEmail({ subject: 'Server Error', text: `Error in /api/me: ${error}` });
+      res.status(500);
+    }
   }
 });
 
