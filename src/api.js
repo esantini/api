@@ -24,6 +24,7 @@ const {
   getIsAdmin,
   getIsWhitelisted,
   processWeddingMessage,
+  getLocalIp,
 } = require('./utils');
 
 require('./webSocket');
@@ -143,6 +144,11 @@ setTimeout(() => setLight(true, false), 800);
 setTimeout(() => setLight(false, false), 1000);
 
 app.get('/api/light', (req, res) => res.json({ light: getLight() }));
+
+// for local development, not exposed in NGINX
+app.get('/api/localIp', (req, res) => {
+  res.json({ localIp: getLocalIp() });
+});
 
 const videoStream = new VideoStream();
 videoStream.acceptConnections(app, '/api/stream.mp4', true);

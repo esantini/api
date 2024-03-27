@@ -4,6 +4,7 @@ const { processWeddingMessage } = require('./weddingUtils');
 const { getLight, setLight } = require('./lightUtils');
 const { getIsAdmin, getIsWhitelisted } = require('./accessUtils');
 const { sendEmail } = require('./emailUtils');
+const getLocalIp = require('./getLocalIp');
 
 module.exports = {
   validateJsonWebhook,
@@ -14,4 +15,5 @@ module.exports = {
   getIsAdmin,
   getIsWhitelisted,
   sendEmail,
+  getLocalIp,
 };
