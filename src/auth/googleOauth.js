@@ -20,7 +20,16 @@ const googleOauth = (app) => {
       const { name, email, picture } = ticket.getPayload();
       const user = { name, email, picture };
 
-      addUser(user);
+      const { isNew } = addUser(user);
+
+      // if it isn't whitelisted user, send email
+      if (config.oauth.whitelist.indexOf(email) === -1) {
+        sendEmail({
+          to: config.email.myAddress,
+          subject: isNew ? 'New User Logged in' : 'User Logged Back In',
+          text: `${isNew ? 'New ' : ''} User Logged in: ${name} ${email}`,
+        });
+      }
 
       const token = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
       res.cookie('token', token, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });

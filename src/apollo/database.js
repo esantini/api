@@ -21,18 +21,23 @@ function databaseInitialize() {
   if (messages === null) {
     messages = db.addCollection('messages');
   }
+
+  // db.removeCollection('users');
+  // db.removeCollection('conversations');
+  // db.removeCollection('chatMessages');
+
   users = db.getCollection('users');
   if (users === null) {
-    users = db.addCollection('users');
+    users = db.addCollection('users', { unique: ['email'] });
   }
 
   conversations = db.getCollection('conversations');
   if (conversations === null) {
-    conversations = db.addCollection('conversations', { unique: ['id'] });
+    conversations = db.addCollection('conversations', { indices: ['userId'] });
   }
   chatMessages = db.getCollection('chatMessages');
   if (chatMessages === null) {
-    chatMessages = db.addCollection('chatMessages', { unique: ['id'], indices: ['conversationId'] });
+    chatMessages = db.addCollection('chatMessages', { indices: ['conversationId'] });
   }
 
   events = db.getCollection('events');
@@ -113,29 +118,30 @@ const getMessage = () => messages.where(() => true)[0]?.message;
 
 const addUser = (user) => {
   if (getUser(user.email)) {
-    // TODO welcome back // update user
+    return { isNew: false };
   } else {
     users.insert(user);
+    return { isNew: true };
   }
 };
+const getUsers = () => users.data; // TODO remove
 const getUser = (email) => users.findOne({ email });
 
 const addWeddingMessage = (message) => weddingMessages.insert(message);
 const getWeddingMessages = () => weddingMessages.where(() => true);
 
 module.exports = {
+  db,
   init: (cb) => (initCallback = cb),
   addMessage,
-  users,
   addUser,
   getUser,
+  getUsers,
   addEvent,
   getEvents,
   addSession,
   getSessions,
   deleteSession,
-  chatMessages,
-  conversations,
   getMessage,
   getWorldPoints,
   addWeddingMessage,
