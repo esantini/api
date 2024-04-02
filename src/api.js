@@ -17,8 +17,10 @@ const {
   getSessions,
   deleteSession,
   getWorldPoints,
+  getUsers,
 } = require('./apollo/database.js');
 const myGoogleOauth = require('./auth/googleOauth');
+const handleRequestChat = require('./chat/request');
 const {
   getLight,
   setLight,
@@ -63,10 +65,11 @@ app.get('/api/me', (req, res) => {
   try {
     const { token } = req.cookies;
     if (!token) return res.status(200).json({});
-    const { name, picture } = jwt.verify(token, config.tokenSecret);
+    const { name, picture, chatId } = jwt.verify(token, config.tokenSecret);
     res.status(200).json({
       name,
       picture,
+      chatId,
       isWhitelisted: getIsWhitelisted(req),
       isAdmin: getIsAdmin(req),
     });
@@ -110,6 +113,12 @@ app.post('/api/event', (req, res) => {
 app.get('/api/event', (req, res) => {
   res.json(getEvents());
 });
+app.get('/api/allUsers', (req, res) => { // TODO remove
+  res.json(getUsers());
+});
+
+app.post('/api/requestChat', handleRequestChat);
+
 app.get('/api/sessions', (req, res) => {
   res.json(getSessions());
 });
@@ -169,5 +178,5 @@ videoStream.acceptConnections(app, '/api/stream.mp4', true);
 
 app.listen(app.get('port'), () => {
   console.log(`Find the server at: http://localhost:${app.get('port')}/`); // eslint-disable-line no-console
-  console.log(`🚀 Apollo GraphQL ready at http://localhost:4000${graphQlServer.graphqlPath}`)
+  console.log(`🚀 Apollo GraphQL ready at http://localhost:${app.get('port')}${graphQlServer.graphqlPath}`)
 });

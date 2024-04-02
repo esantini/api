@@ -1,4 +1,4 @@
-const { conversations, chatMessages } = require('./database'); // Assuming db.js is your database initialization file
+const { db } = require('./database'); // Assuming db.js is your database initialization file
 
 const resolvers = {
   Query: {

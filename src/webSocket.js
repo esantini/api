@@ -14,8 +14,6 @@ wss.on('connection', function connection(ws) {
     console.log('WebSocket Disconnected');
   });
   ws.on('message', function incoming(data, isBinary) {
-    console.log('WebSocket Message:', { data, isBinary });
-
     // Broadcast incoming message to all clients
     wss.clients.forEach(function each(client) {
       console.log('WebSocket sending to client');
