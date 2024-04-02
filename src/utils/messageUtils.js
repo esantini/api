@@ -1,4 +1,4 @@
-const { addMessage } = require('../database');
+const { addMessage } = require('../apollo/database');
 const lcd = require('./lcd_controller');
 const { sendEmail } = require('./emailUtils');
 

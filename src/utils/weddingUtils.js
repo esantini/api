@@ -1,4 +1,4 @@
-const { addWeddingMessage } = require('../database');
+const { addWeddingMessage } = require('../apollo/database');
 
 const weddingGracias = {
   subject: 'Auto-Reply: Gracias!',

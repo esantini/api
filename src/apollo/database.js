@@ -1,5 +1,5 @@
 const loki = require('lokijs');
-const { sendEmail } = require('./utils/emailUtils');
+const { sendEmail } = require('../utils/emailUtils');
 
 const db = new loki(config.database, {
   autoload: true,
@@ -12,6 +12,8 @@ let users;
 let events;
 let weddingMessages;
 let initCallback = () => { };
+let conversations;
+let chatMessages;
 
 // implement the autoloadback referenced in loki constructor
 function databaseInitialize() {
@@ -23,6 +25,16 @@ function databaseInitialize() {
   if (users === null) {
     users = db.addCollection('users');
   }
+
+  conversations = db.getCollection('conversations');
+  if (conversations === null) {
+    conversations = db.addCollection('conversations', { unique: ['id'] });
+  }
+  chatMessages = db.getCollection('chatMessages');
+  if (chatMessages === null) {
+    chatMessages = db.addCollection('chatMessages', { unique: ['id'], indices: ['conversationId'] });
+  }
+
   events = db.getCollection('events');
   if (events === null) {
     events = db.addCollection('events');
@@ -114,6 +126,7 @@ const getWeddingMessages = () => weddingMessages.where(() => true);
 module.exports = {
   init: (cb) => (initCallback = cb),
   addMessage,
+  users,
   addUser,
   getUser,
   addEvent,
@@ -121,6 +134,8 @@ module.exports = {
   addSession,
   getSessions,
   deleteSession,
+  chatMessages,
+  conversations,
   getMessage,
   getWorldPoints,
   addWeddingMessage,

@@ -2,6 +2,9 @@ require('./init.js'); // Sets global.config from api/config.json && privateConfi
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const geoip = require('geoip-lite');
+const { ApolloServer } = require('apollo-server-express');
+const typeDefs = require('./apollo/schema.js');
+const resolvers = require('./apollo/resolvers.js');
 
 const senseHat = require('./senseHat');
 const VideoStream = require('./videoStream');
@@ -14,7 +17,7 @@ const {
   getSessions,
   deleteSession,
   getWorldPoints,
-} = require('./database');
+} = require('./apollo/database.js');
 const myGoogleOauth = require('./auth/googleOauth');
 const {
   getLight,
@@ -36,6 +39,17 @@ const app = express();
 app.use(express.json());
 app.set('port', config.apiPort);
 app.set('trust proxy', true);
+
+const graphQlServer = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: false,
+});
+graphQlServer
+  .start()
+  .then(() =>
+    graphQlServer.applyMiddleware({ app })
+  );
 
 if (IS_PROD) {
   // Express only serves static assets in production
@@ -155,4 +169,5 @@ videoStream.acceptConnections(app, '/api/stream.mp4', true);
 
 app.listen(app.get('port'), () => {
   console.log(`Find the server at: http://localhost:${app.get('port')}/`); // eslint-disable-line no-console
+  console.log(`🚀 Apollo GraphQL ready at http://localhost:4000${graphQlServer.graphqlPath}`)
 });
