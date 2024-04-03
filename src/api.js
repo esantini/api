@@ -3,7 +3,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const geoip = require('geoip-lite');
 const { ApolloServer } = require('apollo-server-express');
-const typeDefs = require('./apollo/schema.js');
+const typeDefs = require('./apollo/schema');
 const resolvers = require('./apollo/resolvers.js');
 
 const senseHat = require('./senseHat');

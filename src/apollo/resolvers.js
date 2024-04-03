@@ -8,6 +8,28 @@ const resolvers = {
     chatMessages: (_, { conversationId }) => {
       // Implement logic to retrieve chatMessages for a given conversation
     },
+    sessions: (_, { daysAgo = 7 }) => {
+      const sessionsTable = db.getCollection('sessions');
+      const eventsTable = db.getCollection('events'); // Assuming you have an 'events' collection
+      const dateDaysAgo = new Date();
+      dateDaysAgo.setDate(dateDaysAgo.getDate() - daysAgo);
+
+      const sessions = sessionsTable.find({ timestamp: { '$gte': dateDaysAgo } });
+      return sessions.map(session => {
+        // Fetching related events for each session
+        const events = eventsTable.find({ sessionId: session.$loki });
+        return {
+          id: session.$loki,
+          geo: session.geo,
+          timestamp: session.timestamp,
+          events: events.map(event => ({
+            type: event.type,
+            details: event.details,
+            timestamp: event.timestamp,
+          })),
+        };
+      });
+    },
   },
   Mutation: {
     createMessage: (_, { conversationId, senderId, content }) => {
