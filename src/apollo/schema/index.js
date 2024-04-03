@@ -3,7 +3,7 @@ const { gql } = require('apollo-server');
 const typeDefs = gql`
   type User {
     name: String!
-    email: String!
+    email: ID!
     chatId: String!
   }
 
@@ -31,7 +31,7 @@ const typeDefs = gql`
 
   type Session {
     id: Int
-    sessionId: ID
+    sessionId: String
     geo: Geo
     timestamp: String
     events: [Event]

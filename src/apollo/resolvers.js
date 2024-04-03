@@ -8,27 +8,41 @@ const resolvers = {
     chatMessages: (_, { conversationId }) => {
       // Implement logic to retrieve chatMessages for a given conversation
     },
-    sessions: (_, { daysAgo = 7 }) => {
+    sessions: (_, { daysAgo = 7, includeEvents = true }) => {
       const sessionsTable = db.getCollection('sessions');
-      const eventsTable = db.getCollection('events'); // Assuming you have an 'events' collection
       const dateDaysAgo = new Date();
       dateDaysAgo.setDate(dateDaysAgo.getDate() - daysAgo);
 
       const sessions = sessionsTable.find({ timestamp: { '$gte': dateDaysAgo } });
-      return sessions.map(session => {
-        // Fetching related events for each session
-        const events = eventsTable.find({ sessionId: session.$loki });
-        return {
+
+      if (includeEvents) {
+        const eventsTable = db.getCollection('events');
+        const sessionIds = sessions.map(session => session.$loki);
+        const events = eventsTable.find({ sessionId: { '$in': sessionIds } });
+        const eventsBySessionId = [];
+
+        events.forEach(event => {
+          const sessionIdIndex = event.sessionId;
+          if (!eventsBySessionId[sessionIdIndex]) {
+            eventsBySessionId[sessionIdIndex] = [];
+          }
+          eventsBySessionId[sessionIdIndex].push(event);
+        });
+
+        return sessions.map(session => ({
           id: session.$loki,
           geo: session.geo,
           timestamp: session.timestamp,
-          events: events.map(event => ({
-            type: event.type,
-            details: event.details,
-            timestamp: event.timestamp,
-          })),
-        };
-      });
+          events: eventsBySessionId[session.$loki] || [],
+        }));
+      } else {
+        return sessions.map(session => ({
+          id: session.$loki,
+          geo: session.geo,
+          timestamp: session.timestamp,
+          events: [],
+        }));
+      }
     },
   },
   Mutation: {
