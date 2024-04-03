@@ -1,6 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const { sendEmail } = require('../utils');
 const { addUser } = require('../apollo/database');
 
 const googleOauth = (app) => {

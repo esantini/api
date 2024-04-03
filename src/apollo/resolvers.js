@@ -52,6 +52,23 @@ const resolvers = {
     startConversation: (_, { userIds }) => {
       // Implement logic to start a new conversation with given user IDs
     },
+    deleteSession: (_, { sessionId }, context) => {
+      if (!context.getIsAdmin()) return;
+      else if (parseInt(sessionId, 10) <= -1) {
+        throw new Error('Invalid ID');
+      }
+
+      const eventsTable = db.getCollection('events');
+      eventsTable.findAndRemove({ sessionId: parseInt(sessionId, 10) });
+
+      const sessionsTable = db.getCollection('sessions');
+      const session = sessionsTable.findOne({ '$loki': parseInt(sessionId, 10) });
+      if (session) {
+        sessionsTable.remove(session);
+        return true;
+      }
+      return false;
+    },
   },
   User: {
     // Additional resolver logic for user if necessary

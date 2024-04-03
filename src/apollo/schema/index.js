@@ -60,6 +60,7 @@ const typeDefs = gql`
   type Mutation {
     createMessage(conversationId: ID!, senderId: ID!, content: String!): ChatMessage!
     startConversation(userIds: [ID!]!): Conversation!
+    deleteSession(sessionId: Int!): Boolean
   }
 `;
 

@@ -46,6 +46,13 @@ const graphQlServer = new ApolloServer({
   typeDefs,
   resolvers,
   persistedQueries: false,
+  context: ({ req }) => {
+    // const user = getUserFromReq(req); // Implement getUserFromReq to extract user info
+    return {
+      // user,
+      getIsAdmin: () => getIsAdmin(req),
+    };
+  },
 });
 graphQlServer
   .start()
