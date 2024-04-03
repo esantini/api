@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const { sendEmail } = require('./utils');
+const geoip = require('geoip-lite');
+const { sendEmail } = require('./emailUtils');
 
 exports.getIsWhitelisted = (req) => {
   const { token } = req.cookies;
