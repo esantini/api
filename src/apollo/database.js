@@ -75,7 +75,7 @@ const addSession = ({ sessionId, geo = {} }) => {
     sendEmail({
       to: config.email.sessionSubscribers,
       subject: 'New Session',
-      text: `New Session from ${geo.city}, ${geo.region}, ${geo.country}<br />Date: ${localTime}`
+      text: `New Session from ${geo?.city}, ${geo?.region}, ${geo?.country}<br />Date: ${localTime}`
     });
     console.log('New Session:', localTime);
 

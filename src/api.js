@@ -42,6 +42,12 @@ app.use(express.json());
 app.set('port', config.apiPort);
 app.set('trust proxy', true);
 
+if (IS_PROD) {
+  // Express only serves static assets in production
+  app.use(express.static('client/build'));
+  require('./deploy')(app);
+}
+
 const graphQlServer = new ApolloServer({
   typeDefs,
   resolvers,
@@ -59,12 +65,6 @@ graphQlServer
   .then(() =>
     graphQlServer.applyMiddleware({ app })
   );
-
-if (IS_PROD) {
-  // Express only serves static assets in production
-  app.use(express.static('client/build'));
-  require('./deploy')(app);
-}
 
 myGoogleOauth(app);
 
