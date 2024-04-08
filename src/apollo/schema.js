@@ -4,7 +4,6 @@ const typeDefs = gql`
   type User {
     name: String!
     email: ID!
-    chatId: String!
   }
 
   type Conversation {
@@ -12,9 +11,8 @@ const typeDefs = gql`
   }
 
   type ChatMessage {
-    chatId: ID!
-    content: String!
-    createdAt: String!
+    name: String!
+    message: String!
   }
 
   type Geo {
@@ -53,7 +51,7 @@ const typeDefs = gql`
 
   type Query {
     conversations(userId: ID!): [Conversation!]
-    chatMessages(chatId: String!): [ChatMessage!]
+    requestChat(name: String): [ChatMessage]
     sessions(daysAgo: Int): [Session]
   }
 

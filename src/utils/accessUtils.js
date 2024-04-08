@@ -1,25 +1,30 @@
 const jwt = require('jsonwebtoken');
 const geoip = require('geoip-lite');
 const { sendEmail } = require('./emailUtils');
+const {
+  getUser,
+  addConversation,
+} = require('../apollo/database.js');
+const os = require('os');
 
 exports.getIsWhitelisted = (req) => {
   const { token } = req.cookies;
   if (!token) return false;
 
   const { whitelist } = config.oauth;
-  const { email } = jwt.verify(token, config.tokenSecret);
+  const { userId } = jwt.verify(token, config.tokenSecret);
 
-  return whitelist.indexOf(email) !== -1;
-}
+  return whitelist.indexOf(userId) !== -1;
+};
 
 exports.getIsAdmin = (req) => {
   const { token } = req.cookies;
   if (!token) return false;
 
   const { admin } = config.oauth;
-  const { email } = jwt.verify(token, config.tokenSecret);
+  const { userId } = jwt.verify(token, config.tokenSecret);
 
-  const isAdmin = admin.indexOf(email) !== -1;
+  const isAdmin = admin.indexOf(userId) !== -1;
 
   if (!isAdmin) {
     console.error(`Unauthorized Access by ${req.ip}`);
@@ -41,4 +46,70 @@ exports.getIsAdmin = (req) => {
   }
 
   return isAdmin;
-}
+};
+
+const getUserFromReq = (req) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) return null;
+    const { userId } = jwt.verify(token, config.tokenSecret);
+    return getUser(userId);
+  } catch (error) {
+    res.clearCookie('token');
+    if (error.name === 'TokenExpiredError') {
+      return null;
+    } else {
+      console.log('/api/me', { error });
+      sendEmail({ subject: 'Server Error', text: `Error in /api/me: ${error}` });
+      return null;
+    }
+  }
+};
+exports.getUserFromReq = getUserFromReq;
+
+/**
+ * Get chatId from user token or create a new one for guest users
+ * @param {Request} req
+ * @returns {String} chatId
+ */
+exports.getChatId = (req) => {
+  const { chatIdToken } = req.cookies;
+  const user = getUserFromReq(req);
+  let chatId;
+
+  if (!user && chatIdToken) {
+    try {
+      chatId = jwt.verify(chatIdToken, config.tokenSecret)?.chatId;
+    }
+    catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        res.clearCookie('chatIdToken');
+      } else {
+        console.log('Error in getChatId(req): ', error);
+        sendEmail({ subject: 'Server Error', text: `Error getting chatId: ${error}` });
+      }
+    }
+  }
+
+  // create unique chatId for guest user's token
+  if (!user && !chatId) {
+    const newConversation = addConversation();
+    const newChatId = newConversation.$loki;
+    const newToken = jwt.sign(newChatId, config.tokenSecret, { expiresIn: '1d' });
+    res.cookie('chatIdToken', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
+    return newChatId;
+  } else {
+    return user ? user.chatId : chatId;
+  }
+};
+
+exports.getLocalIp = () => {
+  const interfaces = os.networkInterfaces();
+  for (const iface of Object.values(interfaces)) {
+    for (const alias of iface) {
+      if (alias.family === 'IPv4' && !alias.internal) {
+        return alias.address;
+      }
+    }
+  }
+};

@@ -1,19 +1,15 @@
-const { validateJsonWebhook } = require('./webhookUtils.js');
-const { processMessage } = require('./messageUtils.js');
-const { processWeddingMessage } = require('./weddingUtils');
-const { getLight, setLight } = require('./lightUtils');
-const { getIsAdmin, getIsWhitelisted } = require('./accessUtils');
-const { sendEmail } = require('./emailUtils');
-const getLocalIp = require('./getLocalIp');
+const webhookUtils = require('./webhookUtils.js');
+const messageUtils = require('./messageUtils.js');
+const weddingUtils = require('./weddingUtils');
+const lightUtils = require('./lightUtils');
+const accessUtils = require('./accessUtils');
+const emailUtils = require('./emailUtils');
 
 module.exports = {
-  validateJsonWebhook,
-  processMessage,
-  processWeddingMessage,
-  setLight,
-  getLight,
-  getIsAdmin,
-  getIsWhitelisted,
-  sendEmail,
-  getLocalIp,
+  ...webhookUtils,
+  ...messageUtils,
+  ...weddingUtils,
+  ...lightUtils,
+  ...accessUtils,
+  ...emailUtils,
 };

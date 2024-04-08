@@ -20,12 +20,12 @@ const {
   getUsers,
 } = require('./apollo/database.js');
 const myGoogleOauth = require('./auth/googleOauth');
-const handleRequestChat = require('./chat/request');
 const {
   getLight,
   setLight,
-  sendEmail,
   processMessage,
+  getUserFromReq,
+  getChatId,
   getIsAdmin,
   getIsWhitelisted,
   processWeddingMessage,
@@ -52,13 +52,11 @@ const graphQlServer = new ApolloServer({
   typeDefs,
   resolvers,
   cache: 'bounded',
-  context: ({ req }) => {
-    // const user = getUserFromReq(req); // Implement getUserFromReq to extract user info
-    return {
-      // user,
-      getIsAdmin: () => getIsAdmin(req),
-    };
-  },
+  context: ({ req }) => ({
+    getUser: () => getUserFromReq(req),
+    getChatId: () => getChatId(req),
+    getIsAdmin: () => getIsAdmin(req),
+  }),
 });
 graphQlServer
   .start()
@@ -69,27 +67,16 @@ graphQlServer
 myGoogleOauth(app);
 
 app.get('/api/me', (req, res) => {
-  try {
-    const { token } = req.cookies;
-    if (!token) return res.status(200).json({});
-    const { name, picture, chatId } = jwt.verify(token, config.tokenSecret);
-    res.status(200).json({
-      name,
-      picture,
-      chatId,
-      isWhitelisted: getIsWhitelisted(req),
-      isAdmin: getIsAdmin(req),
-    });
-  } catch (error) {
-    res.clearCookie('token');
-    if (error.name === 'TokenExpiredError') {
-      res.status(200).json(null);
-    } else {
-      console.log('/api/me', { error });
-      sendEmail({ subject: 'Server Error', text: `Error in /api/me: ${error}` });
-      res.status(500);
-    }
-  }
+  const user = getUserFromReq(req);
+  if (!user) return res.status(200).json(null);
+  const { name, picture, chatId } = user;
+  res.status(200).json({
+    name,
+    picture,
+    chatId,
+    isWhitelisted: getIsWhitelisted(req),
+    isAdmin: getIsAdmin(req),
+  });
 });
 
 // disable sense-HAT in 'config.json'
@@ -124,7 +111,7 @@ app.get('/api/allUsers', (req, res) => { // TODO remove
   res.json(getUsers());
 });
 
-app.post('/api/requestChat', handleRequestChat);
+// app.post('/api/requestChat', handleRequestChat);
 
 app.get('/api/sessions', (req, res) => {
   res.json(getSessions());

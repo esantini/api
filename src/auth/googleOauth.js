@@ -1,8 +1,8 @@
 const { OAuth2Client } = require('google-auth-library');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
-const { sendEmail } = require('../utils');
-const { addUser } = require('../apollo/database');
+const { sendEmail, getIsWhitelisted, getIsAdmin } = require('../utils');
+const { addUser, getUser, addConversation } = require('../apollo/database');
 
 const googleOauth = (app) => {
   // set "web" in privateConfig.json file
@@ -15,52 +15,60 @@ const googleOauth = (app) => {
       const { body: { idToken } } = req;
       const ticket = await client.verifyIdToken({
         idToken,
-        audience: process.env.CLIENT_ID,
+        audience: config.oauth.web.client_id,
       });
 
-      const { name, email, picture } = ticket.getPayload();
-      const user = { name, email, picture };
-      let chatId;
+      const { name, email, picture, given_name, sub, aud, exp } = ticket.getPayload();
 
-      const { token } = req.cookies;
-      if (token) {
-        try {
-          chatId = jwt.verify(token, config.tokenSecret).chatId;
-        }
-        catch (error) {
-          if (error.name === 'TokenExpiredError') {
-            res.clearCookie('token');
-          } else {
-            console.log('/api/requestChat', { error });
-            sendEmail({ subject: 'Server Error', text: `Error in /api/requestChat: ${error}` });
+      const isExpired = exp * 1000 < Date.now();
+      if (aud !== config.oauth.web.client_id || isExpired) {
+        res.status(400).json({ msg: 'Invalid Token' });
+        return;
+      }
+      console.log({ sub });
+
+      const user = getUser(sub);
+
+      if (!user) {
+        const newUser = { name, email, picture, given_name, userId: sub };
+        const { chatIdToken } = req.cookies;
+        let chatId;
+
+        if (chatIdToken) {
+          try {
+            chatId = jwt.verify(chatIdToken, config.tokenSecret)?.chatId;
           }
+          catch (error) {
+            if (error.name !== 'TokenExpiredError') {
+              console.log('/api/auth/google', { error });
+              sendEmail({ subject: 'Server Error', text: `Error in /api/auth/google: ${error}` });
+            }
+          }
+          res.clearCookie('chatIdToken');
         }
+        if (chatId) {
+          // If user was chatting as guest he'll keep his chatId
+          newUser.chatId = chatId;
+        }
+        else {
+          const newConversation = addConversation();
+          newUser.chatId = newConversation.$loki;
+        }
+        addUser(newUser);
       }
-
-      if (chatId) {
-        // If user was chatting as guest he'll keep his chatId
-        user.chatId = chatId;
-      }
-      else {
-        // if it's new user he'll get new chatId, otherwise this will be ignored when fetching user
-        user.chatId = Date.now().toString(36) + Math.random().toString(36).substring(2);
-      }
-
-      const { isNew } = addUser(user);
 
       // if it isn't whitelisted user, send email
-      if (config.oauth.whitelist.indexOf(email) === -1) {
+      if (config.oauth.whitelist.indexOf(sub) === -1) {
         sendEmail({
-          to: config.email.myAddress,
-          subject: isNew ? 'New User Logged in' : 'User Logged Back In',
-          text: `${isNew ? 'New ' : ''} User Logged in: ${name} ${email}`,
+          subject: user ? 'User Logged Back In' : 'New User Logged in',
+          text: `${user ? '' : 'New '} User Logged in: ${name} ${email}`,
         });
       }
 
-      const newToken = jwt.sign(user, config.tokenSecret, { expiresIn: '1d' });
+      const newToken = jwt.sign({ userId: sub }, config.tokenSecret, { expiresIn: '3d' });
       res.cookie('token', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
-      const isWhitelisted = config.oauth.whitelist.indexOf(email) !== -1;
-      const isAdmin = config.oauth.admin.indexOf(email) !== -1;
+      const isWhitelisted = config.oauth.whitelist.indexOf(sub) !== -1;
+      const isAdmin = config.oauth.admin.indexOf(sub) !== -1;
       res.status(200).json({ name, picture, isWhitelisted, isAdmin });
     });
 

@@ -28,16 +28,16 @@ function databaseInitialize() {
 
   users = db.getCollection('users');
   if (users === null) {
-    users = db.addCollection('users', { unique: ['email'] });
+    users = db.addCollection('users', { indices: ['userId'], unique: ['userId', 'email'] });
   }
 
   conversations = db.getCollection('conversations');
   if (conversations === null) {
-    conversations = db.addCollection('conversations', { indices: ['userId'] });
+    conversations = db.addCollection('conversations', { indices: ['chatId'] });
   }
   chatMessages = db.getCollection('chatMessages');
   if (chatMessages === null) {
-    chatMessages = db.addCollection('chatMessages', { indices: ['conversationId'] });
+    chatMessages = db.addCollection('chatMessages', { indices: ['chatId'] });
   }
 
   events = db.getCollection('events');
@@ -125,7 +125,9 @@ const addUser = (user) => {
   }
 };
 const getUsers = () => users.data; // TODO remove
-const getUser = (email) => users.findOne({ email });
+const getUser = (userId) => users.findOne({ userId });
+
+const addConversation = () => conversations.insert({});
 
 const addWeddingMessage = (message) => weddingMessages.insert(message);
 const getWeddingMessages = () => weddingMessages.where(() => true);
@@ -144,6 +146,7 @@ module.exports = {
   deleteSession,
   getMessage,
   getWorldPoints,
+  addConversation,
   addWeddingMessage,
   getWeddingMessages,
 };
