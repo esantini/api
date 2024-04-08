@@ -1,5 +1,5 @@
 const loki = require('lokijs');
-const { sendEmail } = require('../utils/emailUtils');
+const { sendEmail } = require('./utils/emailUtils');
 
 const db = new loki(config.database, {
   autoload: true,

@@ -18,13 +18,13 @@ const {
   deleteSession,
   getWorldPoints,
   getUsers,
-} = require('./apollo/database.js');
+} = require('./database.js');
 const myGoogleOauth = require('./auth/googleOauth');
 const {
   getLight,
   setLight,
   processMessage,
-  getUserFromReq,
+  getUserFromToken,
   getChatId,
   getIsAdmin,
   getIsWhitelisted,
@@ -53,9 +53,9 @@ const graphQlServer = new ApolloServer({
   resolvers,
   cache: 'bounded',
   context: ({ req }) => ({
-    getUser: () => getUserFromReq(req),
-    getChatId: () => getChatId(req),
-    getIsAdmin: () => getIsAdmin(req),
+    getUser: () => getUserFromToken(req.cookies?.token),
+    getChatId: () => getChatId(req.cookies),
+    getIsAdmin: () => getIsAdmin(req.cookies),
   }),
 });
 graphQlServer
@@ -67,7 +67,7 @@ graphQlServer
 myGoogleOauth(app);
 
 app.get('/api/me', (req, res) => {
-  const user = getUserFromReq(req);
+  const user = getUserFromToken(req.cookies?.token);
   if (!user) return res.status(200).json(null);
   const { name, picture, chatId } = user;
   res.status(200).json({

@@ -4,7 +4,7 @@ const { sendEmail } = require('./emailUtils');
 const {
   getUser,
   addConversation,
-} = require('../apollo/database.js');
+} = require('../database.js');
 const os = require('os');
 
 exports.getIsWhitelisted = (req) => {
@@ -48,9 +48,8 @@ exports.getIsAdmin = (req) => {
   return isAdmin;
 };
 
-const getUserFromReq = (req) => {
+const getUserFromToken = (token) => {
   try {
-    const { token } = req.cookies;
     if (!token) return null;
     const { userId } = jwt.verify(token, config.tokenSecret);
     return getUser(userId);
@@ -65,16 +64,15 @@ const getUserFromReq = (req) => {
     }
   }
 };
-exports.getUserFromReq = getUserFromReq;
+exports.getUserFromToken = getUserFromToken;
 
 /**
  * Get chatId from user token or create a new one for guest users
  * @param {Request} req
  * @returns {String} chatId
  */
-exports.getChatId = (req) => {
-  const { chatIdToken } = req.cookies;
-  const user = getUserFromReq(req);
+exports.getChatId = ({ token, chatIdToken }) => {
+  const user = getUserFromToken(token);
   let chatId;
 
   if (!user && chatIdToken) {
@@ -85,7 +83,7 @@ exports.getChatId = (req) => {
       if (error.name === 'TokenExpiredError') {
         res.clearCookie('chatIdToken');
       } else {
-        console.log('Error in getChatId(req): ', error);
+        console.log('Error in getChatId(): ', error);
         sendEmail({ subject: 'Server Error', text: `Error getting chatId: ${error}` });
       }
     }
@@ -95,8 +93,8 @@ exports.getChatId = (req) => {
   if (!user && !chatId) {
     const newConversation = addConversation();
     const newChatId = newConversation.$loki;
-    const newToken = jwt.sign(newChatId, config.tokenSecret, { expiresIn: '1d' });
-    res.cookie('chatIdToken', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
+    const newToken = jwt.sign({ chatId: newChatId }, config.tokenSecret, { expiresIn: '1d' });
+    res.cookie('chatIdToken', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' }); // TODO res is undefined
     return newChatId;
   } else {
     return user ? user.chatId : chatId;

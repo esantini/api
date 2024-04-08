@@ -38,7 +38,7 @@ global.config = Object.assign(
 const {
   getMessage,
   init: dbInit,
-} = require('./apollo/database');
+} = require('./database');
 
 // LED message in sense-hat:
 let message = 'Hello World!';

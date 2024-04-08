@@ -1,8 +1,8 @@
 const { OAuth2Client } = require('google-auth-library');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
-const { sendEmail, getIsWhitelisted, getIsAdmin } = require('../utils');
-const { addUser, getUser, addConversation } = require('../apollo/database');
+const { sendEmail } = require('../utils');
+const { addUser, getUser, addConversation } = require('../database');
 
 const googleOauth = (app) => {
   // set "web" in privateConfig.json file
