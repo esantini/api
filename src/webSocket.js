@@ -19,7 +19,8 @@ wss.on('connection', function connection(ws, req) {
   const { token, chatIdToken } = parseCookies(req.headers?.cookie);
   console.log({ token, chatIdToken });
 
-  const { userId, given_name } = getUserFromToken(token);
+  const user = getUserFromToken(token);
+  const { userId, given_name } = user ? user : {};
   const chatId = getChatId({ token, chatIdToken });
   if (!chatId) console.error('Chatting witouth a chatId');
   const messagesCollection = db.getCollection('chatMessages');
