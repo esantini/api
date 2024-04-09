@@ -52,10 +52,10 @@ const graphQlServer = new ApolloServer({
   typeDefs,
   resolvers,
   cache: 'bounded',
-  context: ({ req }) => ({
+  context: ({ req, res }) => ({
     getUser: () => getUserFromToken(req.cookies?.token),
-    getChatId: () => getChatId(req.cookies),
-    getIsAdmin: () => getIsAdmin(req.cookies),
+    getChatId: () => getChatId(req.cookies, res),
+    getIsAdmin: () => getIsAdmin(req),
   }),
 });
 graphQlServer

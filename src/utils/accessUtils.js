@@ -58,7 +58,7 @@ const getUserFromToken = (token) => {
     if (error.name === 'TokenExpiredError') {
       return null;
     } else {
-      console.log('/api/me', { error });
+      console.error('/api/me', { error });
       sendEmail({ subject: 'Server Error', text: `Error in /api/me: ${error}` });
       return null;
     }
@@ -71,7 +71,8 @@ exports.getUserFromToken = getUserFromToken;
  * @param {Request} req
  * @returns {String} chatId
  */
-exports.getChatId = ({ token, chatIdToken }) => {
+exports.getChatId = ({ token, chatIdToken }, res) => {
+  // console.log('getChatId: ', { token, chatIdToken });
   const user = getUserFromToken(token);
   let chatId;
 
@@ -83,7 +84,7 @@ exports.getChatId = ({ token, chatIdToken }) => {
       if (error.name === 'TokenExpiredError') {
         res.clearCookie('chatIdToken');
       } else {
-        console.log('Error in getChatId(): ', error);
+        console.error('Error in getChatId(): ', error);
         sendEmail({ subject: 'Server Error', text: `Error getting chatId: ${error}` });
       }
     }
@@ -91,6 +92,10 @@ exports.getChatId = ({ token, chatIdToken }) => {
 
   // create unique chatId for guest user's token
   if (!user && !chatId) {
+    if (!res) {
+      console.error('getChatId: unable to set cookie chatIdToken');
+      return null;
+    }
     const newConversation = addConversation();
     const newChatId = newConversation.$loki;
     const newToken = jwt.sign({ chatId: newChatId }, config.tokenSecret, { expiresIn: '1d' });
