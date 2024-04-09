@@ -3,8 +3,10 @@ const { sendEmail } = require('../utils');
 
 const resolvers = {
   Query: {
-    conversations: (_, { userId }) => {
-      // Implement logic to retrieve conversations for a given user
+    conversations: (_, { }, context) => {
+      if (!context.getIsAdmin()) return [];
+      const convCollection = db.getCollection('conversations');
+      return convCollection.data.map(({ $loki }) => ({ chatId: $loki }));
     },
     requestChat: (_, { name }, context) => {
       // get chatId, if user is guest getChatId will create a conversation
@@ -14,6 +16,12 @@ const resolvers = {
         subject: 'Chat Request',
         text: `Chat Request from ${user ? `User: ${user.name}` : name}`,
       });
+      const messagesCollection = db.getCollection('chatMessages');
+      const chat = messagesCollection.findObjects({ chatId });
+      return chat ? chat : [];
+    },
+    chatMessages: (_, { chatId }, context) => {
+      if (!context.getIsAdmin()) return []; // Non admin user should get messages from requestChat (for now...)
       const messagesCollection = db.getCollection('chatMessages');
       const chat = messagesCollection.findObjects({ chatId });
       return chat ? chat : [];
@@ -56,11 +64,10 @@ const resolvers = {
     },
   },
   Mutation: {
-    createMessage: (_, { conversationId, senderId, content }) => {
-      // Implement logic to create a new message in a conversation
-    },
-    startConversation: (_, { userIds }) => {
-      // Implement logic to start a new conversation with given user IDs
+    setChatId: (_, { chatId }, context) => {
+      if (!context.getIsAdmin()) return;
+      context.setChatId(chatId);
+      return true;
     },
     deleteSession: (_, { sessionId }, context) => {
       if (!context.getIsAdmin()) return;

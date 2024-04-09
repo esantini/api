@@ -50,7 +50,8 @@ const typeDefs = gql`
   }
 
   type Query {
-    conversations(userId: ID!): [Conversation!]
+    conversations: [Conversation]
+    chatMessages(chatId: Int): [ChatMessage]
     requestChat(name: String): [ChatMessage]
     sessions(daysAgo: Int): [Session]
   }
@@ -59,6 +60,7 @@ const typeDefs = gql`
     createMessage(conversationId: ID!, senderId: ID!, content: String!): ChatMessage!
     startConversation(userIds: [ID!]!): Conversation!
     deleteSession(sessionId: Int!): Boolean
+    setChatId(chatId: Int!): Boolean
   }
 `;
 

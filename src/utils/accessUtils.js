@@ -21,9 +21,9 @@ exports.getIsAdmin = (req) => {
   const { token } = req.cookies;
   if (!token) return false;
 
-  const { admin } = config.oauth;
   const { userId } = jwt.verify(token, config.tokenSecret);
 
+  const { admin } = config.oauth;
   const isAdmin = admin.indexOf(userId) !== -1;
 
   if (!isAdmin) {
@@ -52,7 +52,11 @@ const getUserFromToken = (token) => {
   try {
     if (!token) return null;
     const { userId } = jwt.verify(token, config.tokenSecret);
-    return getUser(userId);
+    const user = getUser(userId);
+    const { admin, whitelist } = config.oauth;
+    user.isAdmin = admin.indexOf(userId) !== -1;
+    user.isWhitelisted = whitelist.indexOf(userId) !== -1;
+    return user;
   } catch (error) {
     res.clearCookie('token');
     if (error.name === 'TokenExpiredError') {
@@ -68,7 +72,8 @@ exports.getUserFromToken = getUserFromToken;
 
 /**
  * Get chatId from user token or create a new one for guest users
- * @param {Request} req
+ * @param {Object} cookies
+ * @param {Object} res
  * @returns {String} chatId
  */
 exports.getChatId = ({ token, chatIdToken }, res) => {
@@ -76,7 +81,7 @@ exports.getChatId = ({ token, chatIdToken }, res) => {
   const user = getUserFromToken(token);
   let chatId;
 
-  if (!user && chatIdToken) {
+  if (chatIdToken) {
     try {
       chatId = jwt.verify(chatIdToken, config.tokenSecret)?.chatId;
     }
@@ -99,12 +104,18 @@ exports.getChatId = ({ token, chatIdToken }, res) => {
     const newConversation = addConversation();
     const newChatId = newConversation.$loki;
     const newToken = jwt.sign({ chatId: newChatId }, config.tokenSecret, { expiresIn: '1d' });
-    res.cookie('chatIdToken', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' }); // TODO res is undefined
+    res.cookie('chatIdToken', newToken, { httpOnly: true, secure: config.ssl, sameSite: 'Strict' });
     return newChatId;
   } else {
+    if (user?.isAdmin) return chatId;
     return user ? user.chatId : chatId;
   }
 };
+
+exports.setChatId = (chatId, res) => {
+  const chatIdToken = jwt.sign({ chatId }, config.tokenSecret, { expiresIn: '1d' });
+  res.cookie('chatIdToken', chatIdToken, { httpOnly: true, secure: false, sameSite: 'Strict' }); // TODO secure: config.ssl
+}
 
 exports.getLocalIp = () => {
   const interfaces = os.networkInterfaces();

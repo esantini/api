@@ -14,16 +14,16 @@ const parseCookies = (cookieString = '') => {
 };
 
 wss.on('connection', function connection(ws, req) {
-  console.log('WebSocket Connected');
-
   const { token, chatIdToken } = parseCookies(req.headers?.cookie);
-  console.log({ token, chatIdToken });
+  // console.log({ token, chatIdToken });
 
   const user = getUserFromToken(token);
-  const { userId, given_name } = user ? user : {};
-  const chatId = getChatId({ token, chatIdToken });
+  const { userId, given_name, isAdmin } = user ? user : {};
+
+  const chatId = getChatId({ token: isAdmin ? undefined : token, chatIdToken });
   if (!chatId) console.error('Chatting witouth a chatId');
   const messagesCollection = db.getCollection('chatMessages');
+  ws.chatId = chatId;
 
   ws.on('error', (error) => console.error(error));
   ws.on('open', function open() {
@@ -41,12 +41,12 @@ wss.on('connection', function connection(ws, req) {
       message,
       name: given_name ? given_name : name,
       chatId,
-      userId
+      userId,
     });
 
+    console.log('WebSocket sending message. chatId: ', chatId);
     wss.clients.forEach(function each(client) {
-      console.log('WebSocket sending to client');
-      if (client.readyState === WebSocket.OPEN) {
+      if (client.readyState === WebSocket.OPEN && chatId === client.chatId) {
         client.send(data, { binary: isBinary });
       }
       else console.log('client.readyState Not Open');
